@@ -5,6 +5,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -32,6 +33,7 @@ export class CreateJobDto {
   @IsOptional()
   @IsInt()
   @Min(1)
+  @Max(100)
   max_attempts?: number; // Retry budget, defaults to the column default (3)
 
   @IsOptional()

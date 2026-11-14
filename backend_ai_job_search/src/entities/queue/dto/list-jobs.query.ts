@@ -2,8 +2,8 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-valid
 import { JobStatus } from '../queue.entity.js';
 
 /**
- * Query parameters for `GET /jobs`. Both filters are optional and can be
- * combined, e.g. `?status=processing&type=vacancy_processing_chain`.
+ * Filters for `GET /jobs` (query string) and `POST /jobs/list` (JSON body).
+ * Both filters are optional and can be combined, e.g. `?status=processing`.
  */
 export class ListJobsQueryDto {
   @IsOptional()

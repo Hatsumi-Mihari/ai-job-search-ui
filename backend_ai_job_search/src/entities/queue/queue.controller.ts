@@ -6,12 +6,12 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
-  Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
+import { JsonBodyInterceptor } from '@/common/interceptors/index.js';
 import { QueueService } from './queue.service.js';
 import { CreateJobDto } from './dto/create-job.dto.js';
 import { JobIdDto } from './dto/job-id.dto.js';
@@ -24,11 +24,13 @@ import { ListJobsQueryDto } from './dto/list-jobs.query.js';
 /**
  * HTTP surface of the background job queue.
  *
- * Identifiers are accepted in the request body (project convention) and, for
- * deletion, additionally as a `:id` path segment so REST clients can use
- * `DELETE /jobs/:id`.
+ * Every endpoint reads its input from the request body: `JsonBodyInterceptor`
+ * normalises raw/double-encoded JSON into an object and the DTO of each route
+ * validates it (the global `ValidationPipe` rejects missing, unknown or
+ * malformed fields). No route declares a `:param` segment.
  */
 @Controller('jobs')
+@UseInterceptors(JsonBodyInterceptor)
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
 
@@ -36,6 +38,14 @@ export class QueueController {
 
   @Get()
   async getAll(@Query() query: ListJobsQueryDto) {
+    return await this.queueService.findAll(query);
+  }
+
+  /** Same filters as `GET /jobs`, sent as a validated JSON body. */
+  @Post('list')
+  @HttpCode(HttpStatus.OK)
+  async list(@Body() query: ListJobsQueryDto) {
+    Logger.log('POST', '/jobs/list');
     return await this.queueService.findAll(query);
   }
 
@@ -105,17 +115,21 @@ export class QueueController {
 
   // ---------------------------------------------------------------- delete
 
-  /** Body-based deletion, matching the other entity controllers. */
-  @Delete('delete')
-  async removeByBody(@Body() dto: JobIdDto) {
-    Logger.log('DELETE', '/jobs/delete');
+  /**
+   * Deletes a job selected by the uuid in the JSON body. This is the canonical
+   * delete endpoint: like every other route, it validates a JSON payload
+   * instead of a `:id` path segment.
+   */
+  @Delete()
+  async remove(@Body() dto: JobIdDto) {
+    Logger.log('DELETE', '/jobs');
     return await this.queueService.deleteJobById(dto.id);
   }
 
-  /** REST-style deletion by primary key. */
-  @Delete(':id')
-  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    Logger.log('DELETE', `/jobs/${id}`);
-    return await this.queueService.deleteJobById(id);
+  /** Backwards-compatible alias of `DELETE /jobs` with the same JSON body. */
+  @Delete('delete')
+  async removeAlias(@Body() dto: JobIdDto) {
+    Logger.log('DELETE', '/jobs/delete');
+    return await this.queueService.deleteJobById(dto.id);
   }
 }

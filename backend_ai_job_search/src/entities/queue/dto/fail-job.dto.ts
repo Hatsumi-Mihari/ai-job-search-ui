@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { JobIdDto } from './job-id.dto.js';
 
 /**
@@ -9,5 +9,6 @@ import { JobIdDto } from './job-id.dto.js';
 export class FailJobDto extends JobIdDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(5000)
   error: string; // Error message describing the failure
 }
