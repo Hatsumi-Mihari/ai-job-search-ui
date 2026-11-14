@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule } from '@/entities/index.js'
+import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule } from '@/entities/index.js'
 
 
 @Module({
@@ -35,6 +35,7 @@ import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDat
     ContactsModule,
     StorageFilesModule,
     UserDataModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],
