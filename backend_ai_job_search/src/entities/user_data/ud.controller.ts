@@ -1,0 +1,162 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { UserDataService } from './ud.service.js';
+import { CreateUserDataDto } from './dto/create-user-data.dto.js';
+import { UserDataIdDto } from './dto/user-data-id.dto.js';
+import { UpdateUserDataDto } from './dto/update-user-data.dto.js';
+import {
+  UpdateAddressDto,
+  UpdateCoverTemplateUrlDto,
+  UpdateEmailDto,
+  UpdateImgUrlDto,
+  UpdatePhoneDto,
+  UpdateResumeTemplateUrlDto,
+  UpdateSocialMediaDto,
+  UpdateUserNameDto,
+  UpdateSourcesResearchDto,
+} from './dto/update-user-data-field.dto.js';
+
+/**
+ * All identifiers and field values are sent in the request body, never in the
+ * URL, so no route below declares a `:param` segment.
+ */
+@Controller('user-data')
+export class UserDataController {
+  constructor(private readonly userDataService: UserDataService) {}
+
+  // ------------------------------------------------------------------ read
+
+  @Get()
+  async getAll() {
+    return await this.userDataService.findAll();
+  }
+
+  @Post('find')
+  async getOne(@Body() dto: UserDataIdDto) {
+    Logger.log('POST', '/user-data/find');
+    return await this.userDataService.findOneById(dto.id);
+  }
+
+  // ---------------------------------------------------------------- create
+
+  @Post()
+  async create(@Body() createUserDataDto: CreateUserDataDto) {
+    Logger.log('POST', '/user-data');
+    return await this.userDataService.createUserData(createUserDataDto);
+  }
+
+  // ---------------------------------------------------------------- update
+
+  /** Partial update: `id` selects the row, only the columns sent are changed. */
+  @Patch('update')
+  async update(@Body() updateUserDataDto: UpdateUserDataDto) {
+    Logger.log('PATCH', '/user-data/update');
+    return await this.userDataService.updateUserData(
+      updateUserDataDto.id,
+      updateUserDataDto,
+    );
+  }
+
+  @Patch('user-name')
+  async updateUserName(@Body() updateUserDataDto: UpdateUserNameDto) {
+    Logger.log('PATCH', '/user-data/user-name');
+    return await this.userDataService.updateUserDataUserName(
+      updateUserDataDto.id,
+      updateUserDataDto.user_name,
+    );
+  }
+
+  @Patch('resume-template-url')
+  async updateResumeTemplateUrl(
+    @Body() updateUserDataDto: UpdateResumeTemplateUrlDto,
+  ) {
+    Logger.log('PATCH', '/user-data/resume-template-url');
+    return await this.userDataService.updateUserDataResumeTemplateUrl(
+      updateUserDataDto.id,
+      updateUserDataDto.resume_template_url,
+    );
+  }
+
+  @Patch('cover-template-url')
+  async updateCoverTemplateUrl(
+    @Body() updateUserDataDto: UpdateCoverTemplateUrlDto,
+  ) {
+    Logger.log('PATCH', '/user-data/cover-template-url');
+    return await this.userDataService.updateUserDataCoverTemplateUrl(
+      updateUserDataDto.id,
+      updateUserDataDto.cover_template_url,
+    );
+  }
+
+  @Patch('sources_research')
+  async updateSourcesResearch(
+    @Body() updateUserDataDto: UpdateSourcesResearchDto,
+  ) {
+    Logger.log('PATCH', '/user-data/sources_research');
+    return await this.userDataService.updateUserDataSourcesResearch(
+      updateUserDataDto.id,
+      updateUserDataDto.sources_research,
+    );
+  }
+
+  @Patch('email')
+  async updateEmail(@Body() updateUserDataDto: UpdateEmailDto) {
+    Logger.log('PATCH', '/user-data/email');
+    return await this.userDataService.updateUserDataEmail(
+      updateUserDataDto.id,
+      updateUserDataDto.email,
+    );
+  }
+
+  @Patch('phone')
+  async updatePhone(@Body() updateUserDataDto: UpdatePhoneDto) {
+    Logger.log('PATCH', '/user-data/phone');
+    return await this.userDataService.updateUserDataPhone(
+      updateUserDataDto.id,
+      updateUserDataDto.phone,
+    );
+  }
+
+  @Patch('address')
+  async updateAddress(@Body() updateUserDataDto: UpdateAddressDto) {
+    Logger.log('PATCH', '/user-data/address');
+    return await this.userDataService.updateUserDataAddress(
+      updateUserDataDto.id,
+      updateUserDataDto.address,
+    );
+  }
+
+  @Patch('social-media')
+  async updateSocialMedia(@Body() updateUserDataDto: UpdateSocialMediaDto) {
+    Logger.log('PATCH', '/user-data/social-media');
+    return await this.userDataService.updateUserDataSocialMedia(
+      updateUserDataDto.id,
+      updateUserDataDto.social_media,
+    );
+  }
+
+  @Patch('img-url')
+  async updateImgUrl(@Body() updateUserDataDto: UpdateImgUrlDto) {
+    Logger.log('PATCH', '/user-data/img-url');
+    return await this.userDataService.updateUserDataImgUrl(
+      updateUserDataDto.id,
+      updateUserDataDto.img_url,
+    );
+  }
+
+  // ---------------------------------------------------------------- delete
+
+  /** Deletes a user data record selected by the id sent in the request body. */
+  @Delete('delete')
+  async remove(@Body() dto: UserDataIdDto) {
+    Logger.log('DELETE', '/user-data/delete');
+    return await this.userDataService.deleteUserDataById(dto.id);
+  }
+}
