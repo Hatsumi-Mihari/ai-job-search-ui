@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -31,6 +32,19 @@ export type JobFailureResult = {
   status: JobStatus;
   attempts: number;
   available_at: Date | null;
+};
+
+/** Minimal task identity handed to a worker that claimed a job. */
+export type QueueTask = {
+  id: string;
+  type: string;
+};
+
+/** Result returned by the worker claim endpoint (`POST /jobs/lock`). */
+export type LockJobResult = {
+  found: boolean;
+  message: string;
+  task: QueueTask | null;
 };
 
 @Injectable()
@@ -122,17 +136,42 @@ export class QueueService {
   // ------------------------------------------------------------------ lock
 
   /**
-   * Atomically claims the next available pending job for a worker.
+   * Retrieves the first task of the execution queue for a worker.
    *
-   * The row is locked with `FOR UPDATE SKIP LOCKED` inside a transaction, so
-   * concurrent workers skip rows that another worker is already locking
-   * instead of blocking on them. The status transition and the attempt
-   * counter are committed together with the lock.
+   * `id` and/or `type` (the task name) optionally narrow the claim. The row is
+   * locked with `FOR UPDATE SKIP LOCKED` and switched from `pending` to
+   * `processing` inside the same transaction, so two handlers can never claim
+   * the same task: concurrent workers skip the locked row instead of blocking
+   * on it, and the committed status hides it from later claims.
    *
-   * @returns the claimed job, or `null` when the queue has no work left.
+   * - Queue empty and no filter: reports that no task exists (`found: false`).
+   * - Filter given, nothing matches or task missing: 404 "not in the database".
+   * - Task exists but is not awaiting execution: 409 conflict.
+   *
+   * @returns `{ found, message, task: { id, type } }`.
    */
   @Measure('QueueService')
-  async lockNextJob(dto: LockJobDto = {}): Promise<JobEntity | null> {
+  async lockNextJob(dto: LockJobDto = {}): Promise<LockJobResult> {
+    this.assertLockFilter(dto);
+
+    const job = await this.claimNextJob(dto);
+
+    if (job) {
+      return {
+        found: true,
+        message: 'Task claimed for execution',
+        task: { id: job.id, type: job.type },
+      };
+    }
+
+    return await this.explainEmptyClaim(dto);
+  }
+
+  /**
+   * Atomic claim: selects, locks and transitions the task in one transaction.
+   * Returns `null` when no row matches, without throwing.
+   */
+  private async claimNextJob(dto: LockJobDto): Promise<JobEntity | null> {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -149,6 +188,10 @@ export class QueueService {
         .addOrderBy('job.created_at', 'ASC')
         .limit(1);
 
+      if (dto.id) {
+        query.andWhere('job.id = :id', { id: dto.id });
+      }
+
       if (dto.type) {
         query.andWhere('job.type = :type', { type: dto.type });
       }
@@ -157,7 +200,6 @@ export class QueueService {
 
       if (!job) {
         await queryRunner.commitTransaction();
-        Logger.log(`lockNextJob empty type=${dto.type ?? '*'}`, 'QueueService');
         return null;
       }
 
@@ -169,7 +211,7 @@ export class QueueService {
       await queryRunner.commitTransaction();
 
       Logger.log(
-        `lockNextJob id=${claimed.id} attempts=${claimed.attempts}`,
+        `lockNextJob id=${claimed.id} type=${claimed.type} attempts=${claimed.attempts}`,
         'QueueService',
       );
 
@@ -179,6 +221,64 @@ export class QueueService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  /**
+   * Turns an unsuccessful claim into the response required by the workers:
+   * a normal "no task" report when no filter was supplied, a 404 when the
+   * requested task is not in the database, and a 409 when it exists but is not
+   * awaiting execution.
+   */
+  private async explainEmptyClaim(dto: LockJobDto): Promise<LockJobResult> {
+    if (dto.id) {
+      const existing = await this.jobRepository.findOneBy({ id: dto.id });
+
+      // Unknown id, or the id exists under a different task name: the requested
+      // (id, type) pair is not in the database.
+      if (!existing || (dto.type && existing.type !== dto.type)) {
+        throw new NotFoundException(
+          dto.type
+            ? `Task ${dto.id} of type '${dto.type}' is not in the database`
+            : `Task ${dto.id} is not in the database`,
+        );
+      }
+
+      throw new ConflictException(
+        `Task ${dto.id} is not awaiting execution (status: ${existing.status})`,
+      );
+    }
+
+    if (dto.type) {
+      const existing = await this.jobRepository.findOneBy({ type: dto.type });
+
+      if (!existing) {
+        throw new NotFoundException(
+          `Task of type '${dto.type}' is not in the database`,
+        );
+      }
+
+      throw new ConflictException(
+        `No task of type '${dto.type}' is awaiting execution`,
+      );
+    }
+
+    Logger.log('lockNextJob empty queue', 'QueueService');
+
+    return {
+      found: false,
+      message: 'No tasks in the queue',
+      task: null,
+    };
+  }
+
+  private assertLockFilter(dto: LockJobDto): void {
+    if (dto.id !== undefined && !isUuid(dto.id)) {
+      throw new BadRequestException('Job id must be a valid uuid');
+    }
+
+    if (dto.type !== undefined && dto.type.trim().length === 0) {
+      throw new BadRequestException('Job type must be a non-empty string');
     }
   }
 

@@ -71,9 +71,17 @@ export class QueueController {
   // ------------------------------------------------------------------ lock
 
   /**
-   * Claims the next available job. Returns `null` when the queue is empty.
-   * `FOR UPDATE SKIP LOCKED` guarantees that two workers never receive the
-   * same job.
+   * Claims the first task of the execution queue for this handler.
+   *
+   * The JSON body is optional and can filter by `id` and/or `type` (the task
+   * name). The claimed task is switched from `pending` to `processing` inside
+   * a `FOR UPDATE SKIP LOCKED` transaction, so other handlers can neither pick
+   * nor execute it.
+   *
+   * - `200 { found: true, message, task: { id, type } }` when a task is claimed
+   * - `200 { found: false, message: 'No tasks in the queue', task: null }`
+   * - `404` when the requested id/type is not in the database
+   * - `409` when the task exists but is not awaiting execution
    */
   @Post('lock')
   @HttpCode(HttpStatus.OK)
