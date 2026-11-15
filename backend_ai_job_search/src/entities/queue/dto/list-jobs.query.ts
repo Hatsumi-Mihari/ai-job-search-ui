@@ -2,8 +2,9 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-valid
 import { JobStatus } from '../queue.entity.js';
 
 /**
- * Filters for `GET /jobs` (query string) and `POST /jobs/list` (JSON body).
- * Both filters are optional and can be combined, e.g. `?status=processing`.
+ * Filters for `GET /jobs`, read from the query string (never from the request
+ * body). Every filter is optional and they can be combined, e.g.
+ * `GET /jobs?status=pending&type=vacancy_processing_chain`.
  */
 export class ListJobsQueryDto {
   @IsOptional()
@@ -15,4 +16,10 @@ export class ListJobsQueryDto {
   @IsNotEmpty()
   @MaxLength(100)
   type?: string; // Filter by task / chain type
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  step?: string; // Filter by current chain step, e.g. 'WAIT_AI'
 }

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Measure } from '@/common/services/index.js';
 import { JobEntity, JobStatus } from './queue.entity.js';
 import { CreateJobDto } from './dto/create-job.dto.js';
@@ -80,12 +80,28 @@ export class QueueService {
 
   // ------------------------------------------------------------------ read
 
-  async findAll(query: ListJobsQueryDto = {}): Promise<JobEntity[]> {
+  /**
+   * Returns every job matching the query-string filters, with all entity
+   * fields serialised as JSON:
+   * `{ filters, total, results: [{ id, type, status, step, payload, ... }] }`.
+   */
+  async findAll(filters: ListJobsQueryDto = {}): Promise<JobEntity[]> {
+    const where: FindOptionsWhere<JobEntity> = {};
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.type) {
+      where.type = filters.type;
+    }
+
+    if (filters.step) {
+      where.step = filters.step;
+    }
+
     return await this.jobRepository.find({
-      where: {
-        ...(query.status ? { status: query.status } : {}),
-        ...(query.type ? { type: query.type } : {}),
-      },
+      where,
       order: { created_at: 'DESC' },
     });
   }

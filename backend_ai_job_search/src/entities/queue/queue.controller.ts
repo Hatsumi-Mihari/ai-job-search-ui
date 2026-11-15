@@ -24,10 +24,10 @@ import { ListJobsQueryDto } from './dto/list-jobs.query.js';
 /**
  * HTTP surface of the background job queue.
  *
- * Every endpoint reads its input from the request body: `JsonBodyInterceptor`
- * normalises raw/double-encoded JSON into an object and the DTO of each route
- * validates it (the global `ValidationPipe` rejects missing, unknown or
- * malformed fields). No route declares a `:param` segment.
+ * Reads are filtered through the query string (`GET /jobs?status=&type=&step=`)
+ * so no filter travels in a request body. Mutating endpoints validate a JSON
+ * body: `JsonBodyInterceptor` normalises raw/double-encoded JSON and each DTO
+ * is enforced by the global `ValidationPipe`.
  */
 @Controller('jobs')
 @UseInterceptors(JsonBodyInterceptor)
@@ -36,17 +36,21 @@ export class QueueController {
 
   // ------------------------------------------------------------------ read
 
+  /**
+   * Filters jobs via the query string and returns the matches as JSON, with
+   * every field of each matching job.
+   */
   @Get()
-  async getAll(@Query() query: ListJobsQueryDto) {
-    return await this.queueService.findAll(query);
-  }
+  async getAll(@Query() filters: ListJobsQueryDto) {
+    Logger.log('GET', '/jobs');
 
-  /** Same filters as `GET /jobs`, sent as a validated JSON body. */
-  @Post('list')
-  @HttpCode(HttpStatus.OK)
-  async list(@Body() query: ListJobsQueryDto) {
-    Logger.log('POST', '/jobs/list');
-    return await this.queueService.findAll(query);
+    const results = await this.queueService.findAll(filters);
+
+    return {
+      filters,
+      total: results.length,
+      results,
+    };
   }
 
   @Post('find')
