@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule } from '@/entities/index.js'
+import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
 
 
 @Module({
@@ -36,6 +37,7 @@ import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDat
     StorageFilesModule,
     UserDataModule,
     QueueModule,
+    TaskOrchestratorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
