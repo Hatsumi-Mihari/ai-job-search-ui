@@ -15,6 +15,7 @@ import { FailJobDto } from './dto/fail-job.dto.js';
 import { ListJobsQueryDto } from './dto/list-jobs.query.js';
 import { LockJobDto } from './dto/lock-job.dto.js';
 import { UpdateJobDto } from './dto/update-job.dto.js';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { computeRetryDelayMs, isJsonObject, isUuid } from './utils/job.util.js';
 
 /** Result returned by every mutating operation that does not return the job. */
@@ -65,6 +66,7 @@ export class QueueService {
     private readonly jobRepository: Repository<JobEntity>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ---------------------------------------------------------------- create
@@ -84,7 +86,7 @@ export class QueueService {
     Logger.log(`createJob type=${dto.type}`, 'QueueService');
 
     const saved = await this.jobRepository.save(job);
-
+    this.eventEmitter.emit('task.created', { taskId: saved.id });
     return {
       success: true,
       message: 'Job successfully queued',
@@ -183,7 +185,6 @@ export class QueueService {
         .setLock('pessimistic_write')
         .setOnLocked('skip_locked')
         .where('job.status = :status', { status: JobStatus.PENDING })
-        .andWhere('job.available_at <= CURRENT_TIMESTAMP')
         .orderBy('job.available_at', 'ASC')
         .addOrderBy('job.created_at', 'ASC')
         .limit(1);
@@ -338,7 +339,9 @@ export class QueueService {
 
     if (canRetry) {
       job.status = JobStatus.PENDING;
-      job.available_at = new Date(Date.now() + computeRetryDelayMs(job.attempts));
+      job.available_at = new Date(
+        Date.now() + computeRetryDelayMs(job.attempts),
+      );
     } else {
       job.status = JobStatus.FAILED;
     }
@@ -350,6 +353,7 @@ export class QueueService {
       'QueueService',
     );
 
+    this.eventEmitter.emit('task.created', { taskId: job.id });
     return {
       success: true,
       message: canRetry

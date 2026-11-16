@@ -5,15 +5,10 @@ import { Measure } from '@/common/services/logger/logger.decorator.js';
 import { JobEntity, JobStatus } from '@/entities/queue/queue.entity.js';
 import { QueueService } from '@/entities/queue/queue.service.js';
 import { normalizeErrorMessage } from './utils/task-orchestrator.util.js';
+import { OnEvent } from '@nestjs/event-emitter';
+import { WorkerRegistry } from './worker_reg.service.js';
 
 const CONTEXT = 'TaskOrchestratorService';
-
-/**
- * Function that executes the business logic of a task. It only receives the
- * id of the task, which is already persisted in the database; the full row is
- * read back by the processor when it needs more context.
- */
-export type TaskProcessor = (taskId: string) => Promise<void> | void;
 
 /**
  * Database-driven background task orchestrator.
@@ -35,8 +30,6 @@ export class TaskOrchestratorService implements OnModuleDestroy {
   /** Maximum number of tasks this instance may execute at the same time. */
   private readonly maxConcurrent = 3;
 
-  /** Task handlers provided through DI, keyed by the job `type` column. */
-  private readonly processors = new Map<string, TaskProcessor>();
 
   /** Prevents two concurrent scans from claiming the same pending rows. */
   private isDispatching = false;
@@ -48,33 +41,8 @@ export class TaskOrchestratorService implements OnModuleDestroy {
     @InjectRepository(JobEntity)
     private readonly jobRepository: Repository<JobEntity>,
     private readonly queueService: QueueService,
+    private readonly workerRegistry: WorkerRegistry,
   ) {}
-
-  // -------------------------------------------------------------- register
-
-  /**
-   * Registers the processor for one job type. Features register their handler
-   * during bootstrap (`onModuleInit`), so the processing logic is provided
-   * through Dependency Injection instead of being hard-coded here.
-   *
-   * Jobs whose `type` has no registered processor are reported as failed
-   * through the queue service, which applies the retry budget.
-   */
-  registerProcessor(jobType: string, processor: TaskProcessor): void {
-    const type = jobType.trim();
-
-    if (type.length === 0) {
-      throw new Error('Job type must be a non-empty string');
-    }
-
-    if (typeof processor !== 'function') {
-      throw new Error('Task processor must be a function');
-    }
-
-    this.processors.set(type, processor);
-
-    Logger.log(`Processor registered for job type '${type}'`, CONTEXT);
-  }
 
   // --------------------------------------------------------------- trigger
 
@@ -89,11 +57,12 @@ export class TaskOrchestratorService implements OnModuleDestroy {
    * Other modules receive this service through DI (the module is `@Global()`)
    * and call `triggerTask(job.id)` after persisting a job.
    */
-  triggerTask(taskId: string): void {
-    Logger.log(`Task ${taskId} triggered`, CONTEXT);
+  @OnEvent('task.created', { async: true })
+  async triggerTask(payload: { taskId: string }): Promise<void> {
+    Logger.log(`Task ${payload.taskId} triggered`, CONTEXT);
 
-    void this.processTask(taskId);
-    void this.drain();
+    void this.processTask(payload.taskId);
+    //void this.drain();
   }
 
   // --------------------------------------------------------------- process
@@ -151,7 +120,7 @@ export class TaskOrchestratorService implements OnModuleDestroy {
 
       claimedType = claim.task.type;
 
-      const processor = this.processors.get(claimedType);
+      const processor = this.workerRegistry.get(claimedType);
 
       if (!processor) {
         throw new Error(

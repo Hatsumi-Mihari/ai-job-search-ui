@@ -83,18 +83,10 @@ export class QueueController {
    * - `404` when the requested id/type is not in the database
    * - `409` when the task exists but is not awaiting execution
    */
-  @Post('lock')
-  @HttpCode(HttpStatus.OK)
-  async lock(@Body() dto: LockJobDto) {
-    Logger.log('POST', '/jobs/lock');
-    return await this.queueService.lockNextJob(dto);
-  }
-
-  /** Alias of `POST /jobs/lock` for workers that prefer a PATCH verb. */
-  @Patch('next')
+  @Post('next')
   @HttpCode(HttpStatus.OK)
   async next(@Body() dto: LockJobDto) {
-    Logger.log('PATCH', '/jobs/next');
+    Logger.log('POST', '/jobs/next');
     return await this.queueService.lockNextJob(dto);
   }
 
