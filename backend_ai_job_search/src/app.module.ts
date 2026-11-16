@@ -9,6 +9,7 @@ import {
 } from '@/entities/index.js'
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
 import { WorkersModule } from './common/workers/worker.module.js';
+import { CompanyResearchModule } from './entities/company_research/cr.module.js';
 
 
 @Module({
@@ -48,7 +49,8 @@ import { WorkersModule } from './common/workers/worker.module.js';
     UserDataModule,
     QueueModule,
     TaskOrchestratorModule,
-    WorkersModule
+    WorkersModule,
+    CompanyResearchModule
   ],
   controllers: [AppController],
   providers: [AppService],
