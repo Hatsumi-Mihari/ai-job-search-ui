@@ -3,8 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule } from '@/entities/index.js'
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { 
+  VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule 
+} from '@/entities/index.js'
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
+import { WorkersModule } from './common/workers/worker.module.js';
 
 
 @Module({
@@ -31,6 +35,12 @@ import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task
         };
       },
     }),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      maxListeners: 20,
+      verboseMemoryLeak: true,
+    }),
     VacModule,
     TelemetryModule,
     ContactsModule,
@@ -38,8 +48,9 @@ import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task
     UserDataModule,
     QueueModule,
     TaskOrchestratorModule,
+    WorkersModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
