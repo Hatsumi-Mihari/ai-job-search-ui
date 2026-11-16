@@ -33,7 +33,7 @@ export class CreateJobDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(3)
   max_attempts?: number; // Retry budget, defaults to the column default (3)
 
   @IsOptional()
