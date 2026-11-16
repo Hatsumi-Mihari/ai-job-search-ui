@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule } from '@/entities/index.js'
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
+import { CompanyResearchModule } from './entities/company_research/cr.module.js'
 
 
 @Module({
@@ -38,6 +39,7 @@ import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task
     UserDataModule,
     QueueModule,
     TaskOrchestratorModule,
+    CompanyResearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
