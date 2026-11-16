@@ -5,7 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { 
-  VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule 
+  VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule, SeenJobsModule 
 } from '@/entities/index.js'
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
 import { CompanyResearchModule } from './entities/company_research/cr.module.js'
@@ -50,7 +50,8 @@ import { WorkersModule } from './common/workers/worker.module.js';
     QueueModule,
     TaskOrchestratorModule,
     WorkersModule,
-    CompanyResearchModule
+    CompanyResearchModule,
+    SeenJobsModule
   ],
   controllers: [AppController],
   providers: [AppService],
