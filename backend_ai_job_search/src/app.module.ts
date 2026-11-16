@@ -8,6 +8,7 @@ import {
   VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule 
 } from '@/entities/index.js'
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
+import { CompanyResearchModule } from './entities/company_research/cr.module.js'
 import { WorkersModule } from './common/workers/worker.module.js';
 
 
@@ -48,6 +49,7 @@ import { WorkersModule } from './common/workers/worker.module.js';
     UserDataModule,
     QueueModule,
     TaskOrchestratorModule,
+    CompanyResearchModule,
     WorkersModule
   ],
   controllers: [AppController],
