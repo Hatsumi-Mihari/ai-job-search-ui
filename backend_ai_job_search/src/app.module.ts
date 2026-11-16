@@ -8,12 +8,8 @@ import {
   VacModule, TelemetryModule, ContactsModule, StorageFilesModule, UserDataModule, QueueModule 
 } from '@/entities/index.js'
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
-<<<<<<< HEAD
 import { CompanyResearchModule } from './entities/company_research/cr.module.js'
-=======
 import { WorkersModule } from './common/workers/worker.module.js';
-import { CompanyResearchModule } from './entities/company_research/cr.module.js';
->>>>>>> feature/task-orchestrator
 
 
 @Module({
@@ -53,12 +49,8 @@ import { CompanyResearchModule } from './entities/company_research/cr.module.js'
     UserDataModule,
     QueueModule,
     TaskOrchestratorModule,
-<<<<<<< HEAD
-    CompanyResearchModule,
-=======
     WorkersModule,
     CompanyResearchModule
->>>>>>> feature/task-orchestrator
   ],
   controllers: [AppController],
   providers: [AppService],
