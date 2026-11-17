@@ -21,7 +21,7 @@ export enum JobStatus {
  * `status` + `available_at` are indexed together because the worker lock query
  * always filters on both columns, and orders by `available_at`.
  */
-@Entity('jobs')
+@Entity('queue')
 @Index('IDX_JOBS_STATUS_AVAILABLE_AT', ['status', 'available_at'])
 export class JobEntity {
   @PrimaryGeneratedColumn('uuid')
