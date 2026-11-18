@@ -3,7 +3,7 @@ import { Entity, Index, PrimaryGeneratedColumn, Column, CreateDateColumn } from 
 @Entity('storage_files')
 export class StorageFileEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Index('IDX_STORAGE_FILE_NAME_HASH', ['file_name'], { type: 'hash' })
   @Column({ type: 'varchar', length: 256, nullable: false })

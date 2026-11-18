@@ -18,7 +18,7 @@ import { StorageService } from '@/common/services/index.js'
 export type StorageFileMutationResult = {
     success: boolean;
     message: string;
-    id?: number;
+    id?: string;
 };
 
 /** Result returned when a download link is requested for a stored file. */
@@ -67,6 +67,26 @@ export class StorageFileService {
     };
   }
 
+  @Measure('StorageFileService')
+  async createStorageFileEmpty(
+    fileName: string,
+  ): Promise<StorageFileMutationResult> {
+    const newFileEntity = this.storageFileRepository.create({
+      file_name: fileName,
+      size: 0,
+      sources3: '*',
+    });
+
+    Logger.log('createStorageFile', 'StorageFileService');
+    const savedFile = await this.storageFileRepository.save(newFileEntity);
+
+    return {
+      success: true,
+      message: 'Index empty file successfully added',
+      id: savedFile.id,
+    };
+  }
+
   // ------------------------------------------------------------------ read
 
   async findAll(): Promise<StorageFileEntity[]> {
@@ -74,8 +94,7 @@ export class StorageFileService {
   }
 
   @Measure('StorageFileService')
-  async findOneById(id: number): Promise<StorageFileEntity> {
-    this.assertValidId(id);
+  async findOneById(id: string): Promise<StorageFileEntity> {
 
     const file = await this.storageFileRepository.findOneBy({ id });
 
@@ -129,10 +148,9 @@ export class StorageFileService {
    */
   @Measure('StorageFileService')
   async updateStorageFile(
-    id: number,
+    id: string,
     fileDTO: UpdateStorageFilePayload,
   ): Promise<StorageFileMutationResult> {
-    this.assertValidId(id);
 
     const file = await this.storageFileRepository.findOneBy({ id });
 
@@ -240,13 +258,7 @@ export class StorageFileService {
     return `${normalizedBase}/${encodeURI(normalizedPath)}`;
   }
 
-  private assertValidId(id: number): void {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new BadRequestException(
-        'Storage file id must be a positive integer',
-      );
-    }
-  }
+
 
   private assertNonEmptyString(value: string, field: string): void {
     if (typeof value !== 'string' || value.trim().length === 0) {

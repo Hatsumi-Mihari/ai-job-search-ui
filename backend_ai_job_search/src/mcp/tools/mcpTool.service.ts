@@ -12,8 +12,7 @@ export class HelloTool {
     }),
   })
   async hello({ name }: { name: string }) {
-
-    Logger.log(`name: ${name}`, "MPC SERVER TOOL TEST")
+    Logger.log(`name: ${name}`, 'MPC SERVER TOOL TEST');
     return {
       content: [
         {
