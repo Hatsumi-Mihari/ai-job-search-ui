@@ -1,1 +1,1 @@
-export * from './test.worker.js';
+export * from './test_worker/test.worker.js';

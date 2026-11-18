@@ -10,6 +10,9 @@ import {
 import { TaskOrchestratorModule } from '@/common/services/task_orchestrator/task_orchestrator.module.js'
 import { CompanyResearchModule } from './entities/company_research/cr.module.js'
 import { WorkersModule } from './common/workers/worker.module.js';
+import { McpServerModule } from './mcp/mcp.module.js';
+import { OpenCodeModule } from './common/services/opencode/opencode.module.js';
+
 
 
 @Module({
@@ -51,7 +54,9 @@ import { WorkersModule } from './common/workers/worker.module.js';
     TaskOrchestratorModule,
     WorkersModule,
     CompanyResearchModule,
-    SeenJobsModule
+    SeenJobsModule,
+    McpServerModule,
+    OpenCodeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
