@@ -3,7 +3,7 @@ import { Workers } from './test_worker/test.worker.js';
 import { VacModule } from '@/entities/vacances/vac.module.js';
 import {OpenCodeModule} from '../services/opencode/opencode.module.js'
 import { StorageFilesModule } from '@/entities/index.js';
-import { McpVacWorker } from './mcpWorkers/mcpVac.service.js';
+import { McpVacWorker } from '../../mcp/tools/mcpWorkers/mcpVac.service.js';
 
 @Module({
   imports: [
