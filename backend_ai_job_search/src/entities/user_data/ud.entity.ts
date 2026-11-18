@@ -37,4 +37,25 @@ export class UserDataEntity {
 
   @Column({ type: 'varchar', length: 512, nullable: false })
   cover_template_url: string; // URL of the cover letter template
+
+  @Column({ type: 'text', nullable: true, name: 'CLAUDE_md' })
+  claude_md: string | null; // Markdown content of CLAUDE.md
+
+  @Column({ type: 'text', nullable: true, name: '01-candidate-profile_md' })
+  candidate_profile_md: string | null; // Markdown content of 01-candidate-profile.md
+
+  @Column({ type: 'text', nullable: true, name: '02-behavioral-profile_md' })
+  behavioral_profile_md: string | null; // Markdown content of 02-behavioral-profile.md
+
+  @Column({ type: 'text', nullable: true, name: '03-writing-style_md' })
+  writing_style_md: string | null; // Markdown content of 03-writing-style.md
+
+  @Column({ type: 'text', nullable: true, name: '04-job-evaluation_md' })
+  job_evaluation_md: string | null; // Markdown content of 04-job-evaluation.md
+
+  @Column({ type: 'text', nullable: true, name: '07-interview-prep_md' })
+  interview_prep_md: string | null; // Markdown content of 07-interview-prep.md
+
+  @Column({ type: 'text', nullable: true, name: 'search-queries_md' })
+  search_queries_md: string | null; // Markdown content of search-queries.md
 }

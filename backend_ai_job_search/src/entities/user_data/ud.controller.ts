@@ -13,14 +13,21 @@ import { UserDataIdDto } from './dto/user-data-id.dto.js';
 import { UpdateUserDataDto } from './dto/update-user-data.dto.js';
 import {
   UpdateAddressDto,
+  UpdateBehavioralProfileMdDto,
+  UpdateCandidateProfileMdDto,
+  UpdateClaudeMdDto,
   UpdateCoverTemplateUrlDto,
   UpdateEmailDto,
   UpdateImgUrlDto,
+  UpdateInterviewPrepMdDto,
+  UpdateJobEvaluationMdDto,
   UpdatePhoneDto,
   UpdateResumeTemplateUrlDto,
+  UpdateSearchQueriesMdDto,
   UpdateSocialMediaDto,
   UpdateUserNameDto,
   UpdateSourcesResearchDto,
+  UpdateWritingStyleMdDto,
 } from './dto/update-user-data-field.dto.js';
 
 /**
@@ -148,6 +155,83 @@ export class UserDataController {
     return await this.userDataService.updateUserDataImgUrl(
       updateUserDataDto.id,
       updateUserDataDto.img_url,
+    );
+  }
+
+  // ------------------------------------------------- markdown document fields
+
+  @Patch('claude-md')
+  async updateClaudeMd(@Body() updateUserDataDto: UpdateClaudeMdDto) {
+    Logger.log('PATCH', '/user-data/claude-md');
+    return await this.userDataService.updateUserDataClaudeMd(
+      updateUserDataDto.id,
+      updateUserDataDto.claude_md,
+    );
+  }
+
+  @Patch('candidate-profile-md')
+  async updateCandidateProfileMd(
+    @Body() updateUserDataDto: UpdateCandidateProfileMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/candidate-profile-md');
+    return await this.userDataService.updateUserDataCandidateProfileMd(
+      updateUserDataDto.id,
+      updateUserDataDto.candidate_profile_md,
+    );
+  }
+
+  @Patch('behavioral-profile-md')
+  async updateBehavioralProfileMd(
+    @Body() updateUserDataDto: UpdateBehavioralProfileMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/behavioral-profile-md');
+    return await this.userDataService.updateUserDataBehavioralProfileMd(
+      updateUserDataDto.id,
+      updateUserDataDto.behavioral_profile_md,
+    );
+  }
+
+  @Patch('writing-style-md')
+  async updateWritingStyleMd(
+    @Body() updateUserDataDto: UpdateWritingStyleMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/writing-style-md');
+    return await this.userDataService.updateUserDataWritingStyleMd(
+      updateUserDataDto.id,
+      updateUserDataDto.writing_style_md,
+    );
+  }
+
+  @Patch('job-evaluation-md')
+  async updateJobEvaluationMd(
+    @Body() updateUserDataDto: UpdateJobEvaluationMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/job-evaluation-md');
+    return await this.userDataService.updateUserDataJobEvaluationMd(
+      updateUserDataDto.id,
+      updateUserDataDto.job_evaluation_md,
+    );
+  }
+
+  @Patch('interview-prep-md')
+  async updateInterviewPrepMd(
+    @Body() updateUserDataDto: UpdateInterviewPrepMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/interview-prep-md');
+    return await this.userDataService.updateUserDataInterviewPrepMd(
+      updateUserDataDto.id,
+      updateUserDataDto.interview_prep_md,
+    );
+  }
+
+  @Patch('search-queries-md')
+  async updateSearchQueriesMd(
+    @Body() updateUserDataDto: UpdateSearchQueriesMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/search-queries-md');
+    return await this.userDataService.updateUserDataSearchQueriesMd(
+      updateUserDataDto.id,
+      updateUserDataDto.search_queries_md,
     );
   }
 

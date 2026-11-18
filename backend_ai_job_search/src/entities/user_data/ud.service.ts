@@ -23,6 +23,16 @@ export type UserDataMutationResult = {
   id?: string;
 };
 
+/** Columns that hold the content of a markdown document of the user profile. */
+export type MarkdownField =
+  | 'claude_md'
+  | 'candidate_profile_md'
+  | 'behavioral_profile_md'
+  | 'writing_style_md'
+  | 'job_evaluation_md'
+  | 'interview_prep_md'
+  | 'search_queries_md';
+
 @Injectable()
 export class UserDataService {
   /** Columns that a client is allowed to write to. */
@@ -38,6 +48,24 @@ export class UserDataService {
     'address',
     'social_media',
     'img_url',
+    'claude_md',
+    'candidate_profile_md',
+    'behavioral_profile_md',
+    'writing_style_md',
+    'job_evaluation_md',
+    'interview_prep_md',
+    'search_queries_md',
+  ];
+
+  /** Markdown document columns. They are stored as plain text and may be empty. */
+  private static readonly MARKDOWN_FIELDS: ReadonlyArray<MarkdownField> = [
+    'claude_md',
+    'candidate_profile_md',
+    'behavioral_profile_md',
+    'writing_style_md',
+    'job_evaluation_md',
+    'interview_prep_md',
+    'search_queries_md',
   ];
 
   constructor(
@@ -192,6 +220,78 @@ export class UserDataService {
     return this.applyUpdate(id, { img_url: url });
   }
 
+  // ------------------------------------------------- markdown document fields
+
+  @Measure('UserDataService')
+  async updateUserDataClaudeMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'claude_md');
+
+    return this.applyUpdate(id, { claude_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataCandidateProfileMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'candidate_profile_md');
+
+    return this.applyUpdate(id, { candidate_profile_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataBehavioralProfileMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'behavioral_profile_md');
+
+    return this.applyUpdate(id, { behavioral_profile_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataWritingStyleMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'writing_style_md');
+
+    return this.applyUpdate(id, { writing_style_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataJobEvaluationMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'job_evaluation_md');
+
+    return this.applyUpdate(id, { job_evaluation_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataInterviewPrepMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'interview_prep_md');
+
+    return this.applyUpdate(id, { interview_prep_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataSearchQueriesMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'search_queries_md');
+
+    return this.applyUpdate(id, { search_queries_md: markdown });
+  }
+
   // ---------------------------------------------------------------- delete
 
   /**
@@ -264,6 +364,14 @@ export class UserDataService {
       this.assertSocialMedia(changes.social_media);
     }
 
+    for (const field of UserDataService.MARKDOWN_FIELDS) {
+      const value = changes[field];
+
+      if (value !== undefined) {
+        this.assertMarkdown(value, field);
+      }
+    }
+
     if (Object.keys(changes).length === 0) {
       throw new BadRequestException('No editable fields were provided');
     }
@@ -301,6 +409,19 @@ export class UserDataService {
       throw new BadRequestException(
         `${field} must be at most ${max} characters long`,
       );
+    }
+  }
+
+  /**
+   * Markdown documents are free-form text, so only the type is enforced.
+   * An empty string is accepted and clears the stored document.
+   */
+  private assertMarkdown(
+    value: unknown,
+    field: string,
+  ): asserts value is string {
+    if (typeof value !== 'string') {
+      throw new BadRequestException(`${field} must be a string`);
     }
   }
 

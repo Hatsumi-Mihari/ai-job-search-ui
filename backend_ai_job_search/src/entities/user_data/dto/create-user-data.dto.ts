@@ -58,4 +58,32 @@ export class CreateUserDataDto {
   @IsNotEmpty()
   @MaxLength(512)
   img_url: string; // URL of the user's image
+
+  @IsOptional()
+  @IsString()
+  claude_md?: string; // Markdown content of CLAUDE.md
+
+  @IsOptional()
+  @IsString()
+  candidate_profile_md?: string; // Markdown content of 01-candidate-profile.md
+
+  @IsOptional()
+  @IsString()
+  behavioral_profile_md?: string; // Markdown content of 02-behavioral-profile.md
+
+  @IsOptional()
+  @IsString()
+  writing_style_md?: string; // Markdown content of 03-writing-style.md
+
+  @IsOptional()
+  @IsString()
+  job_evaluation_md?: string; // Markdown content of 04-job-evaluation.md
+
+  @IsOptional()
+  @IsString()
+  interview_prep_md?: string; // Markdown content of 07-interview-prep.md
+
+  @IsOptional()
+  @IsString()
+  search_queries_md?: string; // Markdown content of search-queries.md
 }

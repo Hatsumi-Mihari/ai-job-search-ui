@@ -77,3 +77,38 @@ export class UpdateSourcesResearchDto extends UserDataIdDto {
   @IsNotEmpty()
   sources_research?: string[] | undefined; // Research source URLs
 }
+
+export class UpdateClaudeMdDto extends UserDataIdDto {
+  @IsString()
+  claude_md: string; // Markdown content of CLAUDE.md
+}
+
+export class UpdateCandidateProfileMdDto extends UserDataIdDto {
+  @IsString()
+  candidate_profile_md: string; // Markdown content of 01-candidate-profile.md
+}
+
+export class UpdateBehavioralProfileMdDto extends UserDataIdDto {
+  @IsString()
+  behavioral_profile_md: string; // Markdown content of 02-behavioral-profile.md
+}
+
+export class UpdateWritingStyleMdDto extends UserDataIdDto {
+  @IsString()
+  writing_style_md: string; // Markdown content of 03-writing-style.md
+}
+
+export class UpdateJobEvaluationMdDto extends UserDataIdDto {
+  @IsString()
+  job_evaluation_md: string; // Markdown content of 04-job-evaluation.md
+}
+
+export class UpdateInterviewPrepMdDto extends UserDataIdDto {
+  @IsString()
+  interview_prep_md: string; // Markdown content of 07-interview-prep.md
+}
+
+export class UpdateSearchQueriesMdDto extends UserDataIdDto {
+  @IsString()
+  search_queries_md: string; // Markdown content of search-queries.md
+}
