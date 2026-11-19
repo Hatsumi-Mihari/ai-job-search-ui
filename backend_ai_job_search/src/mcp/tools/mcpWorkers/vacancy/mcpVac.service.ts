@@ -302,24 +302,4 @@ export class McpVacWorker {
       storage_file_id,
     );
   }
-
-  // ----------------------------------------------------------------- delete
-
-  @Tool({
-    name: 'vacancy_delete',
-    description:
-      'Deletes a vacancy by id when it belongs to uid. Not idempotent: a missing row or another owner fails with NotFoundException. The user_data row is never touched.',
-    inputSchema: z.object({ id: vacancyIdSchema, uid: vacancyUidSchema }),
-  })
-  async vacancyDelete({
-    id,
-    uid,
-  }: {
-    id: z.infer<typeof vacancyIdSchema>;
-    uid: z.infer<typeof vacancyUidSchema>;
-  }): Promise<VacancyMutationResult> {
-    Logger.log(`vacancy_delete id=${id} uid=${uid}`, CONTEXT);
-
-    return await this.vacService.deleteVacById(id, uid);
-  }
 }

@@ -164,9 +164,9 @@ export class UserDataService {
 
   /** Returns the currently selected user, or null when none is selected. */
   @Measure('UserDataService')
-  async findSelectedUser(): Promise<UserDataEntity | null> {
+  async findSelectedUser(): Promise<string | undefined> {
     if (!this.userSelected) {
-      return null;
+      return undefined;
     }
 
     const userData = await this.userDataRepository.findOneBy({
@@ -178,7 +178,7 @@ export class UserDataService {
       this.userSelected = null;
     }
 
-    return userData;
+    return userData?.id;
   }
 
   /** Returns the id of the selected user without loading the record. */

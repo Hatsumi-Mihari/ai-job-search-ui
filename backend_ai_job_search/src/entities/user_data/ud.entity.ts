@@ -56,11 +56,7 @@ export class UserDataEntity {
   @Column({ type: 'text', nullable: true, name: '05-cv-templates_md' })
   cv_templates_md: string | null; // Markdown content of 05-cv-templates.md
 
-  @Column({
-    type: 'text',
-    nullable: true,
-    name: '06-cover-letter-templates_md',
-  })
+  @Column({ type: 'text', nullable: true, name: '06-cover-letter-templates_md' })
   cover_letter_templates_md: string | null; // Markdown content of 06-cover-letter-templates.md
 
   @Column({ type: 'text', nullable: true, name: '07-interview-prep_md' })

@@ -67,7 +67,10 @@ export class UserDataController {
   /** Returns the currently selected user, or null when none is selected. */
   @Get('selected')
   async getSelected() {
-    Logger.log('GET', '/user-data/selected');
+    Logger.log(
+      `GET selectUser id=${await this.userDataService.findSelectedUser()}`,
+      `/user-data/selected`,
+    );
     return await this.userDataService.findSelectedUser();
   }
 
