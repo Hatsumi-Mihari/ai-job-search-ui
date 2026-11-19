@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Tool } from '@nestjs/mcp';
 import { z } from 'zod';
@@ -6,6 +10,7 @@ import { z } from 'zod';
 import {
   StorageFileService,
   type StorageFileDownloadLink,
+  type StorageFileMutationResult,
 } from '@/entities/storage_files/sf.service.js';
 import { getStorageConfig } from './config/storage.config.js';
 import {
@@ -16,22 +21,32 @@ import {
   type StorageFilePage,
   type StorageFileView,
 } from './utils/storage-file.util.js';
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_FILE_NAME_LENGTH,
+  UPLOAD_CONTENT_TYPE_PATTERN,
+  decodeUploadInput,
+  toMulterFile,
+} from './utils/storage-upload.util.js';
 
 const CONTEXT = 'McpStorageFilesWorker';
 
 /**
- * Read-only MCP tools for the files recorded in `storage_files`.
+ * MCP tools for the files recorded in `storage_files`.
  *
  * Every tool delegates to `StorageFileService` (`entities/storage_files`), so
  * validation, error mapping and the database access stay in one place; the
- * tools add no persistence and no HTTP client.
+ * tools implement no persistence of their own and no HTTP client.
  *
- * The object-store target link is not hardcoded: `storage_file_get_endpoint`
- * and `storage_file_get_download_link` read `S3_ENDPOINT` from the environment
- * through the configuration definition in `config/storage.config.ts`.
+ * The object-store target link is not hardcoded: `storage_file_get_endpoint`,
+ * `storage_file_get_download_link` and `storage_file_upload` read `S3_ENDPOINT`
+ * from the environment through the configuration definition in
+ * `config/storage.config.ts`.
  *
- * Upload, metadata update and delete are intentionally not exposed: an MCP
- * call cannot supply a multipart file, and the other two mutate data.
+ * Reads are exposed by `storage_file_list` and `storage_file_get`. Upload is
+ * exposed by `storage_file_upload`, which accepts base64 JSON content because
+ * an MCP call cannot send multipart form data. Metadata update and delete stay
+ * unavailable: they mutate data and were not part of the requested scope.
  */
 
 const listStorageFilesSchema = z.object({
@@ -69,6 +84,36 @@ const getStorageFileDownloadLinkSchema = z.object({
 });
 
 export type StorageFileDownloadLinkView = StorageFileDownloadLink & {
+  /** Target link of the object store, read from the S3_ENDPOINT configuration key. */
+  S3_ENDPOINT: string | null;
+};
+
+const uploadStorageFileSchema = z.object({
+  file_name: z
+    .string()
+    .min(1)
+    .max(MAX_UPLOAD_FILE_NAME_LENGTH)
+    .describe(
+      `Name of the file to store (1-${MAX_UPLOAD_FILE_NAME_LENGTH} characters). Only the last path segment is used; control characters are removed. The stored name is prefixed with a timestamp, so the record's file_name differs from this value.`,
+    ),
+  content_base64: z
+    .string()
+    .min(1)
+    .describe(
+      `Base64-encoded file content. Standard or URL-safe alphabet, padding optional, and a data:<mime>;base64, prefix is tolerated. At most ${MAX_UPLOAD_BYTES} decoded bytes.`,
+    ),
+  content_type: z
+    .string()
+    .regex(UPLOAD_CONTENT_TYPE_PATTERN)
+    .optional()
+    .describe(
+      'MIME type of the content, e.g. "application/pdf". Defaults to application/octet-stream.',
+    ),
+});
+
+export type StorageFileUploadResult = StorageFileMutationResult & {
+  /** The newly stored record, as returned by the read tools. */
+  file: StorageFileView;
   /** Target link of the object store, read from the S3_ENDPOINT configuration key. */
   S3_ENDPOINT: string | null;
 };
@@ -162,5 +207,60 @@ export class McpStorageFilesWorker {
     const { S3_ENDPOINT } = getStorageConfig(this.configService);
 
     return { ...link, S3_ENDPOINT };
+  }
+
+  // ------------------------------------------------------------------ write
+
+  @Tool({
+    name: 'storage_file_upload',
+    description:
+      'Uploads one file to the configured S3 storage and records it in storage_files. Content is sent as base64 JSON because an MCP call cannot send multipart form data. This has side effects: it writes an S3 object and inserts a database row. The stored file_name is prefixed with a timestamp, so use the returned file record (or storage_file_list) for later reads. Uploading the same name twice creates two records and two objects.',
+    inputSchema: uploadStorageFileSchema,
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  })
+  async storageFileUpload({
+    file_name,
+    content_base64,
+    content_type,
+  }: z.infer<
+    typeof uploadStorageFileSchema
+  >): Promise<StorageFileUploadResult> {
+    const { S3_ENDPOINT } = getStorageConfig(this.configService);
+
+    if (S3_ENDPOINT === null) {
+      throw new InternalServerErrorException(
+        'S3_ENDPOINT is not configured; cannot upload files',
+      );
+    }
+
+    const upload = decodeUploadInput({
+      fileName: file_name,
+      contentBase64: content_base64,
+      contentType: content_type,
+    });
+
+    Logger.log(
+      `storage_file_upload file_name=${upload.fileName} bytes=${upload.buffer.length}`,
+      CONTEXT,
+    );
+
+    const result = await this.storageFileService.createStorageFile(
+      toMulterFile(upload),
+    );
+
+    if (!result.id) {
+      throw new InternalServerErrorException(
+        'The file was uploaded but no storage_files record id was returned',
+      );
+    }
+
+    const file = await this.storageFileService.findOneById(result.id);
+
+    return { ...result, file: toStorageFileView(file), S3_ENDPOINT };
   }
 }
