@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserDataEntity, type SocialMedia } from './ud.entity.js';
 import { CreateUserDataDto } from './dto/create-user-data.dto.js';
+import { withDefaultDocuments } from './utils/default-documents.util.js';
 import { Measure } from '@/common/services/index.js';
 
 /**
@@ -91,7 +92,11 @@ export class UserDataService {
   async createUserData(
     userDataDTO: CreateUserDataDto,
   ): Promise<UserDataMutationResult> {
-    const newUserData = this.userDataRepository.create(userDataDTO);
+    // Omitted markdown documents start with the framework defaults from
+    // `src/common/ai/defSkills/` instead of null.
+    const newUserData = this.userDataRepository.create(
+      withDefaultDocuments(userDataDTO),
+    );
 
     Logger.log('createUserData', 'UserDataService');
 

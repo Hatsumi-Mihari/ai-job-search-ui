@@ -55,6 +55,18 @@ endpoint is the one configured by `McpModule` (`/mcp` in
 
 The public field names match the database column names of `UserDataEntity`.
 
+## Defaults
+
+A new `user_data` record created through `UserDataService.createUserData` is
+pre-filled with the framework documents from `src/common/ai/defSkills/` for the
+ten fields that have a source file. The content is compiled into
+`src/entities/user_data/utils/default-documents.data.util.ts`
+(`node scripts/generate-default-documents.mjs`), so the read tools return real
+content for a freshly created user instead of `null`.
+
+`search_queries_md` has no source file and therefore no default. A caller can
+still omit a document explicitly by sending `null` or an empty string.
+
 ## Usage
 
 Read all documents of the selected user:
