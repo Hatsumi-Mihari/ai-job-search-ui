@@ -9,17 +9,18 @@ import {
 } from 'class-validator';
 
 export class CreateVacancyDto {
+  @IsUUID()
+  @IsNotEmpty()
+  uid: string; // Owner of the vacancy (user_data.id)
 
   @IsDateString()
   @IsNotEmpty()
   date_pub: string;
 
-
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   company: string;
-
 
   @IsString()
   @IsNotEmpty()
@@ -34,26 +35,21 @@ export class CreateVacancyDto {
   @IsNotEmpty()
   fit_rating: number;
 
-
   @IsString()
   @IsNotEmpty()
   source: string;
-
 
   @IsString()
   @IsNotEmpty()
   note: string;
 
-
   @IsUUID()
   @IsOptional()
   source_cover_latter_id?: string | null;
 
-
   @IsUUID()
   @IsOptional()
   source_resume_id?: string | null;
-
 
   @IsString()
   @IsNotEmpty()

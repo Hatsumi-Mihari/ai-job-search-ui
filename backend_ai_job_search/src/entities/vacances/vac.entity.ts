@@ -8,12 +8,21 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import {StorageFileEntity} from '../storage_files/sf.entity.js'
+import { StorageFileEntity } from '../storage_files/sf.entity.js';
 
 @Entity('vacancies')
 export class VacancyEntity {
   @PrimaryGeneratedColumn()
   id: number;
+
+  /**
+   * Owner of the vacancy (`user_data.id`). Kept as a plain indexed UUID column
+   * on purpose: there is no `@ManyToOne` relation and no foreign key, so
+   * deleting a user never blocks or cascades on vacancies.
+   */
+  @Index('IDX_VAC_UID', ['uid'])
+  @Column({ type: 'uuid', nullable: false })
+  uid: string;
 
   @Column({ type: 'date', nullable: false })
   date_pub: string; // Publication date

@@ -13,6 +13,7 @@ export type VacancyDocumentLinks = {
 
 /** Input accepted by the `vacancy_create` tool. */
 export type CreateVacancyInput = {
+  uid: string;
   date_pub: string;
   company: string;
   status: string;
@@ -36,6 +37,7 @@ export function toCreateVacancyDto(
   input: CreateVacancyInput,
 ): CreateVacancyDto {
   const dto: CreateVacancyDto = {
+    uid: input.uid,
     date_pub: input.date_pub,
     company: input.company,
     status: input.status,

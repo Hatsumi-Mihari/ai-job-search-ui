@@ -6,22 +6,30 @@ import { TestService } from '@/entities/vacances/vac.service.js';
 import { OpenCodeService } from '@/common/services/opencode/opencode.service.js';
 import { StorageFileService } from '@/entities/storage_files/sf.service.js';
 
+/**
+ * Placeholder owner used by this development worker. It must reference an
+ * existing `user_data` row, so replace it with a real user id before running
+ * the `vacancy_processing` task end to end.
+ */
+const TEST_VACANCY_UID = '00000000-0000-0000-0000-000000000000';
+
 @Injectable()
 export class Workers {
-  constructor(
-    private readonly moduleRef: ModuleRef
-  ) {}
+  constructor(private readonly moduleRef: ModuleRef) {}
 
   async test(taskId: string) {
     Logger.log(`Processing vacancy task ${taskId}`, 'VacancyWorker');
     const vacancyService = this.moduleRef.get(TestService, { strict: false });
     const opencode = this.moduleRef.get(OpenCodeService, { strict: false });
-    const storageFile = this.moduleRef.get(StorageFileService, {strict: false});
+    const storageFile = this.moduleRef.get(StorageFileService, {
+      strict: false,
+    });
 
-    const fileEmptyCV = await storageFile.createStorageFileEmpty("null");
+    const fileEmptyCV = await storageFile.createStorageFileEmpty('null');
     const fileEmptyCL = await storageFile.createStorageFileEmpty('null');
 
     await vacancyService.createVac({
+      uid: TEST_VACANCY_UID,
       chanel: 'LinkedIn',
       date_pub: '10/11/2026',
       company: 'Pia.Inc',
@@ -31,10 +39,10 @@ export class Workers {
       source: 'https://google.com',
       note: 'null',
       source_cover_latter_id: fileEmptyCL.id,
-      source_resume_id: fileEmptyCV.id
+      source_resume_id: fileEmptyCV.id,
     });
-    
-    const r = await opencode.createSession("Test Nestjs API opencode");
+
+    const r = await opencode.createSession('Test Nestjs API opencode');
     Logger.log(`Created session ${r.id}`, 'VacancyWorker');
     const f = opencode.promptAndWait(
       r.id,
