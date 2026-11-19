@@ -55,6 +55,29 @@ export class UserDataController {
     return await this.userDataService.findOneById(dto.id);
   }
 
+  // ----------------------------------------------------------- selected user
+
+  /** Stores the id of the user chosen by the client as the active selection. */
+  @Post('select')
+  async select(@Body() dto: UserDataIdDto) {
+    Logger.log('POST', '/user-data/select');
+    return await this.userDataService.selectUser(dto.id);
+  }
+
+  /** Returns the currently selected user, or null when none is selected. */
+  @Get('selected')
+  async getSelected() {
+    Logger.log('GET', '/user-data/selected');
+    return await this.userDataService.findSelectedUser();
+  }
+
+  /** Clears the active selection without touching the stored records. */
+  @Delete('selected')
+  async clearSelected() {
+    Logger.log('DELETE', '/user-data/selected');
+    return this.userDataService.clearSelectedUser();
+  }
+
   // ---------------------------------------------------------------- create
 
   @Post()

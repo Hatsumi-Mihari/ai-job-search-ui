@@ -24,6 +24,13 @@ export type UserDataMutationResult = {
   id?: string;
 };
 
+/** Result returned when the in-memory selection of a user changes. */
+export type UserSelectionResult = {
+  success: boolean;
+  message: string;
+  id: string | null;
+};
+
 /** Columns that hold the content of a markdown document of the user profile. */
 export type MarkdownField =
   | 'claude_md'
@@ -81,6 +88,12 @@ export class UserDataService {
     'search_queries_md',
   ];
 
+  /**
+   * Primary key of the user currently selected through the controller.
+   * This is in-memory state only; it is not persisted in `user_data`.
+   */
+  private userSelected: string | null = null;
+
   constructor(
     @InjectRepository(UserDataEntity)
     private readonly userDataRepository: Repository<UserDataEntity>,
@@ -126,6 +139,64 @@ export class UserDataService {
     }
 
     return userData;
+  }
+
+  // ----------------------------------------------------------- selected user
+
+  /**
+   * Stores the id of the user that is currently selected. The record is looked
+   * up first, so an unknown id can never become the selected user.
+   */
+  @Measure('UserDataService')
+  async selectUser(id: string): Promise<UserSelectionResult> {
+    const userData = await this.findOneById(id);
+
+    this.userSelected = userData.id;
+
+    Logger.log(`selectUser id=${userData.id}`, 'UserDataService');
+
+    return {
+      success: true,
+      message: 'User successfully selected',
+      id: userData.id,
+    };
+  }
+
+  /** Returns the currently selected user, or null when none is selected. */
+  @Measure('UserDataService')
+  async findSelectedUser(): Promise<UserDataEntity | null> {
+    if (!this.userSelected) {
+      return null;
+    }
+
+    const userData = await this.userDataRepository.findOneBy({
+      id: this.userSelected,
+    });
+
+    // Drop a stale selection if the record no longer exists in the database.
+    if (!userData) {
+      this.userSelected = null;
+    }
+
+    return userData;
+  }
+
+  /** Returns the id of the selected user without loading the record. */
+  getSelectedUserId(): string | null {
+    return this.userSelected;
+  }
+
+  /** Clears the in-memory selection. */
+  clearSelectedUser(): UserSelectionResult {
+    this.userSelected = null;
+
+    Logger.log('clearSelectedUser', 'UserDataService');
+
+    return {
+      success: true,
+      message: 'Selected user cleared',
+      id: null,
+    };
   }
 
   // ---------------------------------------------------------------- update
@@ -368,6 +439,11 @@ export class UserDataService {
     }
 
     await this.userDataRepository.delete({ id });
+
+    // A deleted record must not stay as the selected user.
+    if (this.userSelected === id) {
+      this.userSelected = null;
+    }
 
     Logger.log(`deleteUserDataById id=${id}`, 'UserDataService');
 
