@@ -3,10 +3,11 @@
 ## Project Tech Stack
 - NestJS, TypeORM, TypeScript, PostgreSQL, Swagger, Custom `@Measure` decorator.
 
-## Available Skills
-The agent must utilize specialized skills when executing tasks. 
+## Available Skills**
+The agent must utilize specialized skills when executing tasks.
 - **`create-entity`**: Located at `.agents/skills/create-entity.md`. Use this skill whenever the user asks to create a new database entity, feature module, DTOs, or CRUD operations. Follow all architectural patterns, `@Post`/`@Body` request handling, Swagger documentation, and register exports in `src/index.ts`.
 - **`create-global-service`**: Located at `.agents/skills/create-global-service.md`. Use this skill whenever the user asks to create a standalone global service (`@Global()`) inside `src/common/services/` without database entities, DTOs, or controllers. Follow all architectural patterns, `@Measure` performance tracking, `Logger.log` instrumentation, and register exports in `src/index.ts`.
+- **`mcp-service-tool-generator`**: Located at `.agents/skills/skills/mcp-service-tool-generator/SKILL.md`. Use this skill whenever the user provides a service/API URL, Swagger/OpenAPI specification, or API documentation and asks to create MCP tools for that service. Inspect the actual API contract, follow the existing NestJS and installed `@nestjs/mcp` conventions, generate tools under `./mcp/tools/<nameTool>/`, register them in the appropriate module, document the generated tools in English, and verify the implementation with the project's available build, lint, and test commands.
 
 
 ### 🛠️ Universal Utility Functions Architecture (`utils/`)
