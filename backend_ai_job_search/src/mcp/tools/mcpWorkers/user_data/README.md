@@ -14,13 +14,28 @@ write the explicitly selected user.
 | MCP tool | Purpose | Service call | Equivalent HTTP endpoint |
 | --- | --- | --- | --- |
 | `user_data_get_markdown_field` | Read one document | `UserDataService.findOneById` | `POST /user-data/find` |
-| `user_data_get_markdown_fields` | Read all seven or a selected subset | `UserDataService.findOneById` | `POST /user-data/find` |
+| `user_data_get_markdown_fields` | Read all eleven or a selected subset | `UserDataService.findOneById` | `POST /user-data/find` |
 | `user_data_update_markdown_field` | Overwrite one document | `UserDataService.updateUserData` | `PATCH /user-data/<field>` |
 | `user_data_update_markdown_fields` | Overwrite several documents in one save | `UserDataService.updateUserData` | `PATCH /user-data/update` |
 
-All four tools are registered by `McpUserDataModule`, which is imported by
-`McpServerModule`. The MCP endpoint is the one configured by `McpModule`
-(`/mcp` in `src/mcp/mcp.module.ts`).
+Dedicated per-document tools, so a caller never has to pick a field name:
+
+| MCP tool | Field read or written | Service call | Equivalent HTTP endpoint |
+| --- | --- | --- | --- |
+| `user_data_get_cv_templates` | `05-cv-templates_md` | `UserDataService.findOneById` | `POST /user-data/find` |
+| `user_data_update_cv_templates` | `05-cv-templates_md` | `UserDataService.updateUserData` | `PATCH /user-data/cv-templates-md` |
+| `user_data_get_cover_letter_templates` | `06-cover-letter-templates_md` | `UserDataService.findOneById` | `POST /user-data/find` |
+| `user_data_update_cover_letter_templates` | `06-cover-letter-templates_md` | `UserDataService.updateUserData` | `PATCH /user-data/cover-letter-templates-md` |
+| `user_data_get_application_forms` | `08-application-forms_md` | `UserDataService.findOneById` | `POST /user-data/find` |
+| `user_data_update_application_forms` | `08-application-forms_md` | `UserDataService.updateUserData` | `PATCH /user-data/application-forms-md` |
+| `user_data_get_web_research` | `09-web-research_md` | `UserDataService.findOneById` | `POST /user-data/find` |
+| `user_data_update_web_research` | `09-web-research_md` | `UserDataService.updateUserData` | `PATCH /user-data/web-research-md` |
+
+All twelve tools are registered by `McpUserDataModule`, which is imported by
+`McpServerModule`. `McpUserDataWorker` provides the generic tools,
+`McpUserDataDocumentsWorker` provides the eight dedicated tools. The MCP
+endpoint is the one configured by `McpModule` (`/mcp` in
+`src/mcp/mcp.module.ts`).
 
 ## Fields
 
@@ -31,7 +46,11 @@ All four tools are registered by `McpUserDataModule`, which is imported by
 | `02-behavioral-profile_md` | `behavioral_profile_md` | `02-behavioral-profile.md` | `PATCH /user-data/behavioral-profile-md` |
 | `03-writing-style_md` | `writing_style_md` | `03-writing-style.md` | `PATCH /user-data/writing-style-md` |
 | `04-job-evaluation_md` | `job_evaluation_md` | `04-job-evaluation.md` | `PATCH /user-data/job-evaluation-md` |
+| `05-cv-templates_md` | `cv_templates_md` | `05-cv-templates.md` | `PATCH /user-data/cv-templates-md` |
+| `06-cover-letter-templates_md` | `cover_letter_templates_md` | `06-cover-letter-templates.md` | `PATCH /user-data/cover-letter-templates-md` |
 | `07-interview-prep_md` | `interview_prep_md` | `07-interview-prep.md` | `PATCH /user-data/interview-prep-md` |
+| `08-application-forms_md` | `application_forms_md` | `08-application-forms.md` | `PATCH /user-data/application-forms-md` |
+| `09-web-research_md` | `web_research_md` | `09-web-research.md` | `PATCH /user-data/web-research-md` |
 | `search-queries_md` | `search_queries_md` | `search-queries.md` | `PATCH /user-data/search-queries-md` |
 
 The public field names match the database column names of `UserDataEntity`.
@@ -81,6 +100,16 @@ Read results contain `field`, `column`, `file_name`, `value` and `is_empty`.
 `value` is `null` when the document was never stored, and `is_empty` is also
 `true` for empty or whitespace-only content.
 
+The dedicated tools take the same `user_id` and, for updates, a single
+`content` string; no field selector is involved:
+
+```json
+{
+  "user_id": "3f1c2b9e-6d4a-4c1e-9f0a-1b2c3d4e5f60",
+  "content": "# CV templates\n\n..."
+}
+```
+
 ## Configuration
 
 No new environment variables are required. The tools use the existing
@@ -97,6 +126,8 @@ behind the deployment's normal access controls.
 - Update tools overwrite the complete stored document; they never append.
 - An empty string clears a document. `null` is not accepted as content.
 - `user_data_update_markdown_fields` rejects duplicate fields before writing.
+- The dedicated get/update tools can only touch their own document; they cannot
+  read or write any other field of the row.
 - Only the `user_data` row matching `user_id` is modified. If the UUID does not
   exist, the service raises `NotFoundException` and nothing is written.
 - The tools do not create or delete user data records and do not touch any
@@ -114,5 +145,11 @@ behind the deployment's normal access controls.
 
 ## Verification
 
-- Build: `npm run build`
-- Lint: `npm run lint`
+- Build: `npm run build` — passed.
+- Type check: `npx tsc --noEmit -p tsconfig.json` — passed.
+- Lint: `npm run lint` (`oxlint --type-aware src/ test/`) — no findings in the
+  files of this tool directory. The command still exits non-zero because of
+  pre-existing `tsconfig.json` diagnostics and unused imports in unrelated
+  files.
+- Formatting: `npx prettier --check "src/entities/user_data/**/*.ts" "src/mcp/tools/mcpWorkers/user_data/**/*.ts"` — passed.
+

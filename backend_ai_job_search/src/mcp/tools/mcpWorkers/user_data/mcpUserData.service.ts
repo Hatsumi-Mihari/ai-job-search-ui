@@ -38,11 +38,11 @@ const userIdSchema = z
     'UUID of the user_data record (the selected user). All reads and writes are scoped to this record.',
   );
 
-/** One of the seven markdown documents stored on the user data row. */
+/** One of the eleven markdown documents stored on the user data row. */
 const markdownFieldSchema = z
   .enum(MARKDOWN_DOCUMENT_FIELDS)
   .describe(
-    'Markdown document field: CLAUDE_md, 01-candidate-profile_md, 02-behavioral-profile_md, 03-writing-style_md, 04-job-evaluation_md, 07-interview-prep_md or search-queries_md.',
+    'Markdown document field, named like its database column: CLAUDE_md, 01-candidate-profile_md, 02-behavioral-profile_md, 03-writing-style_md, 04-job-evaluation_md, 05-cv-templates_md, 06-cover-letter-templates_md, 07-interview-prep_md, 08-application-forms_md, 09-web-research_md or search-queries_md.',
   );
 
 const getMarkdownFieldSchema = z.object({
@@ -57,7 +57,7 @@ const getMarkdownFieldsSchema = z.object({
     .min(1)
     .optional()
     .describe(
-      'Document fields to read. Omit to read all seven documents of the selected user.',
+      'Document fields to read. Omit to read all eleven documents of the selected user.',
     ),
 });
 
@@ -137,7 +137,7 @@ export class McpUserDataWorker {
   @Tool({
     name: 'user_data_get_markdown_fields',
     description:
-      'Reads the markdown document fields of the user data record selected by its UUID. Omit "fields" to read all seven documents; an empty document is reported with value null or an empty string.',
+      'Reads the markdown document fields of the user data record selected by its UUID. Omit "fields" to read all eleven documents; an empty document is reported with value null or an empty string.',
     inputSchema: getMarkdownFieldsSchema,
     annotations: { readOnlyHint: true, idempotentHint: true },
   })

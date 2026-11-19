@@ -108,6 +108,26 @@ export class UpdateInterviewPrepMdDto extends UserDataIdDto {
   interview_prep_md: string; // Markdown content of 07-interview-prep.md
 }
 
+export class UpdateCvTemplatesMdDto extends UserDataIdDto {
+  @IsString()
+  cv_templates_md: string; // Markdown content of 05-cv-templates.md
+}
+
+export class UpdateCoverLetterTemplatesMdDto extends UserDataIdDto {
+  @IsString()
+  cover_letter_templates_md: string; // Markdown content of 06-cover-letter-templates.md
+}
+
+export class UpdateApplicationFormsMdDto extends UserDataIdDto {
+  @IsString()
+  application_forms_md: string; // Markdown content of 08-application-forms.md
+}
+
+export class UpdateWebResearchMdDto extends UserDataIdDto {
+  @IsString()
+  web_research_md: string; // Markdown content of 09-web-research.md
+}
+
 export class UpdateSearchQueriesMdDto extends UserDataIdDto {
   @IsString()
   search_queries_md: string; // Markdown content of search-queries.md

@@ -15,7 +15,11 @@ export const MARKDOWN_DOCUMENT_FIELDS = [
   '02-behavioral-profile_md',
   '03-writing-style_md',
   '04-job-evaluation_md',
+  '05-cv-templates_md',
+  '06-cover-letter-templates_md',
   '07-interview-prep_md',
+  '08-application-forms_md',
+  '09-web-research_md',
   'search-queries_md',
 ] as const;
 
@@ -86,11 +90,35 @@ const MARKDOWN_DOCUMENTS: Record<MarkdownDocumentField, MarkdownDocumentMeta> =
       fileName: '04-job-evaluation.md',
       description: 'Job evaluation criteria (04-job-evaluation.md)',
     },
+    '05-cv-templates_md': {
+      field: '05-cv-templates_md',
+      column: 'cv_templates_md',
+      fileName: '05-cv-templates.md',
+      description: 'CV / resume templates (05-cv-templates.md)',
+    },
+    '06-cover-letter-templates_md': {
+      field: '06-cover-letter-templates_md',
+      column: 'cover_letter_templates_md',
+      fileName: '06-cover-letter-templates.md',
+      description: 'Cover letter templates (06-cover-letter-templates.md)',
+    },
     '07-interview-prep_md': {
       field: '07-interview-prep_md',
       column: 'interview_prep_md',
       fileName: '07-interview-prep.md',
       description: 'Interview preparation notes (07-interview-prep.md)',
+    },
+    '08-application-forms_md': {
+      field: '08-application-forms_md',
+      column: 'application_forms_md',
+      fileName: '08-application-forms.md',
+      description: 'Application form answers (08-application-forms.md)',
+    },
+    '09-web-research_md': {
+      field: '09-web-research_md',
+      column: 'web_research_md',
+      fileName: '09-web-research.md',
+      description: 'Web research and fetching rules (09-web-research.md)',
     },
     'search-queries_md': {
       field: 'search-queries_md',
@@ -114,7 +142,7 @@ export function getMarkdownDocument(
 }
 
 /**
- * Resolves the requested fields, or all seven when none were requested.
+ * Resolves the requested fields, or every document when none were requested.
  * Read paths are de-duplicated so a repeated field is not returned twice.
  */
 export function getMarkdownDocuments(

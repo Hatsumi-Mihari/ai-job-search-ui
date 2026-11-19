@@ -13,10 +13,13 @@ import { UserDataIdDto } from './dto/user-data-id.dto.js';
 import { UpdateUserDataDto } from './dto/update-user-data.dto.js';
 import {
   UpdateAddressDto,
+  UpdateApplicationFormsMdDto,
   UpdateBehavioralProfileMdDto,
   UpdateCandidateProfileMdDto,
   UpdateClaudeMdDto,
+  UpdateCoverLetterTemplatesMdDto,
   UpdateCoverTemplateUrlDto,
+  UpdateCvTemplatesMdDto,
   UpdateEmailDto,
   UpdateImgUrlDto,
   UpdateInterviewPrepMdDto,
@@ -27,6 +30,7 @@ import {
   UpdateSocialMediaDto,
   UpdateUserNameDto,
   UpdateSourcesResearchDto,
+  UpdateWebResearchMdDto,
   UpdateWritingStyleMdDto,
 } from './dto/update-user-data-field.dto.js';
 
@@ -213,6 +217,26 @@ export class UserDataController {
     );
   }
 
+  @Patch('cv-templates-md')
+  async updateCvTemplatesMd(@Body() updateUserDataDto: UpdateCvTemplatesMdDto) {
+    Logger.log('PATCH', '/user-data/cv-templates-md');
+    return await this.userDataService.updateUserDataCvTemplatesMd(
+      updateUserDataDto.id,
+      updateUserDataDto.cv_templates_md,
+    );
+  }
+
+  @Patch('cover-letter-templates-md')
+  async updateCoverLetterTemplatesMd(
+    @Body() updateUserDataDto: UpdateCoverLetterTemplatesMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/cover-letter-templates-md');
+    return await this.userDataService.updateUserDataCoverLetterTemplatesMd(
+      updateUserDataDto.id,
+      updateUserDataDto.cover_letter_templates_md,
+    );
+  }
+
   @Patch('interview-prep-md')
   async updateInterviewPrepMd(
     @Body() updateUserDataDto: UpdateInterviewPrepMdDto,
@@ -221,6 +245,26 @@ export class UserDataController {
     return await this.userDataService.updateUserDataInterviewPrepMd(
       updateUserDataDto.id,
       updateUserDataDto.interview_prep_md,
+    );
+  }
+
+  @Patch('application-forms-md')
+  async updateApplicationFormsMd(
+    @Body() updateUserDataDto: UpdateApplicationFormsMdDto,
+  ) {
+    Logger.log('PATCH', '/user-data/application-forms-md');
+    return await this.userDataService.updateUserDataApplicationFormsMd(
+      updateUserDataDto.id,
+      updateUserDataDto.application_forms_md,
+    );
+  }
+
+  @Patch('web-research-md')
+  async updateWebResearchMd(@Body() updateUserDataDto: UpdateWebResearchMdDto) {
+    Logger.log('PATCH', '/user-data/web-research-md');
+    return await this.userDataService.updateUserDataWebResearchMd(
+      updateUserDataDto.id,
+      updateUserDataDto.web_research_md,
     );
   }
 

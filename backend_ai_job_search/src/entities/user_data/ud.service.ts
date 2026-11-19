@@ -30,7 +30,11 @@ export type MarkdownField =
   | 'behavioral_profile_md'
   | 'writing_style_md'
   | 'job_evaluation_md'
+  | 'cv_templates_md'
+  | 'cover_letter_templates_md'
   | 'interview_prep_md'
+  | 'application_forms_md'
+  | 'web_research_md'
   | 'search_queries_md';
 
 @Injectable()
@@ -53,7 +57,11 @@ export class UserDataService {
     'behavioral_profile_md',
     'writing_style_md',
     'job_evaluation_md',
+    'cv_templates_md',
+    'cover_letter_templates_md',
     'interview_prep_md',
+    'application_forms_md',
+    'web_research_md',
     'search_queries_md',
   ];
 
@@ -64,7 +72,11 @@ export class UserDataService {
     'behavioral_profile_md',
     'writing_style_md',
     'job_evaluation_md',
+    'cv_templates_md',
+    'cover_letter_templates_md',
     'interview_prep_md',
+    'application_forms_md',
+    'web_research_md',
     'search_queries_md',
   ];
 
@@ -273,6 +285,26 @@ export class UserDataService {
   }
 
   @Measure('UserDataService')
+  async updateUserDataCvTemplatesMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'cv_templates_md');
+
+    return this.applyUpdate(id, { cv_templates_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataCoverLetterTemplatesMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'cover_letter_templates_md');
+
+    return this.applyUpdate(id, { cover_letter_templates_md: markdown });
+  }
+
+  @Measure('UserDataService')
   async updateUserDataInterviewPrepMd(
     id: string,
     markdown: string,
@@ -280,6 +312,26 @@ export class UserDataService {
     this.assertMarkdown(markdown, 'interview_prep_md');
 
     return this.applyUpdate(id, { interview_prep_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataApplicationFormsMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'application_forms_md');
+
+    return this.applyUpdate(id, { application_forms_md: markdown });
+  }
+
+  @Measure('UserDataService')
+  async updateUserDataWebResearchMd(
+    id: string,
+    markdown: string,
+  ): Promise<UserDataMutationResult> {
+    this.assertMarkdown(markdown, 'web_research_md');
+
+    return this.applyUpdate(id, { web_research_md: markdown });
   }
 
   @Measure('UserDataService')

@@ -85,7 +85,23 @@ export class UpdateUserDataDto extends UserDataIdDto {
 
   @IsOptional()
   @IsString()
+  cv_templates_md?: string; // Markdown content of 05-cv-templates.md
+
+  @IsOptional()
+  @IsString()
+  cover_letter_templates_md?: string; // Markdown content of 06-cover-letter-templates.md
+
+  @IsOptional()
+  @IsString()
   interview_prep_md?: string; // Markdown content of 07-interview-prep.md
+
+  @IsOptional()
+  @IsString()
+  application_forms_md?: string; // Markdown content of 08-application-forms.md
+
+  @IsOptional()
+  @IsString()
+  web_research_md?: string; // Markdown content of 09-web-research.md
 
   @IsOptional()
   @IsString()

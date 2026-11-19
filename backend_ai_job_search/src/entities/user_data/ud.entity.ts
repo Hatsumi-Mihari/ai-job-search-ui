@@ -53,8 +53,24 @@ export class UserDataEntity {
   @Column({ type: 'text', nullable: true, name: '04-job-evaluation_md' })
   job_evaluation_md: string | null; // Markdown content of 04-job-evaluation.md
 
+  @Column({ type: 'text', nullable: true, name: '05-cv-templates_md' })
+  cv_templates_md: string | null; // Markdown content of 05-cv-templates.md
+
+  @Column({
+    type: 'text',
+    nullable: true,
+    name: '06-cover-letter-templates_md',
+  })
+  cover_letter_templates_md: string | null; // Markdown content of 06-cover-letter-templates.md
+
   @Column({ type: 'text', nullable: true, name: '07-interview-prep_md' })
   interview_prep_md: string | null; // Markdown content of 07-interview-prep.md
+
+  @Column({ type: 'text', nullable: true, name: '08-application-forms_md' })
+  application_forms_md: string | null; // Markdown content of 08-application-forms.md
+
+  @Column({ type: 'text', nullable: true, name: '09-web-research_md' })
+  web_research_md: string | null; // Markdown content of 09-web-research.md
 
   @Column({ type: 'text', nullable: true, name: 'search-queries_md' })
   search_queries_md: string | null; // Markdown content of search-queries.md
