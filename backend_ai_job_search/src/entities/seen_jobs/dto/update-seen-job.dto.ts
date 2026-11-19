@@ -10,17 +10,11 @@ import {
 import { SeenJobRefDto } from './seen-job-id.dto.js';
 
 /**
- * Body for the bulk update endpoint. `id` + `u_id` select the record and are
- * not editable; every other field is optional, so only the fields that are
+ * Body for the bulk update endpoint. `job_key` + `u_id` select the record and
+ * are not editable; every other field is optional, so only the fields that are
  * sent are changed.
  */
 export class UpdateSeenJobDto extends SeenJobRefDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  job_key?: string; // Stable unique key of the offer, unique per user
-
   @IsOptional()
   @IsString()
   @IsNotEmpty()

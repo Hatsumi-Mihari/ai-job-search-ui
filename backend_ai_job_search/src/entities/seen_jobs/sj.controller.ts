@@ -51,7 +51,7 @@ export class SeenJobsController {
   @Post('find')
   async getOne(@Body() dto: SeenJobIdDto) {
     Logger.log('POST', '/seen-jobs/find');
-    return await this.seenJobsService.findOneById(dto.id);
+    return await this.seenJobsService.findOneById(dto.job_key);
   }
 
   // ---------------------------------------------------------------- create
@@ -64,12 +64,12 @@ export class SeenJobsController {
 
   // ---------------------------------------------------------------- update
 
-  /** Partial update: `id` + `u_id` select the row, only the columns sent change. */
+  /** Partial update: `job_key` + `u_id` select the row, only the columns sent change. */
   @Patch('update')
   async update(@Body() updateSeenJobDto: UpdateSeenJobDto) {
     Logger.log('PATCH', '/seen-jobs/update');
     return await this.seenJobsService.updateSeenJob(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto,
     );
@@ -79,7 +79,7 @@ export class SeenJobsController {
   async updateTitle(@Body() updateSeenJobDto: UpdateSeenJobTitleDto) {
     Logger.log('PATCH', '/seen-jobs/title');
     return await this.seenJobsService.updateSeenJobTitle(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.title,
     );
@@ -89,7 +89,7 @@ export class SeenJobsController {
   async updateCompany(@Body() updateSeenJobDto: UpdateSeenJobCompanyDto) {
     Logger.log('PATCH', '/seen-jobs/company');
     return await this.seenJobsService.updateSeenJobCompany(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.company,
     );
@@ -99,7 +99,7 @@ export class SeenJobsController {
   async updateUrl(@Body() updateSeenJobDto: UpdateSeenJobUrlDto) {
     Logger.log('PATCH', '/seen-jobs/url');
     return await this.seenJobsService.updateSeenJobUrl(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.url,
     );
@@ -109,7 +109,7 @@ export class SeenJobsController {
   async updateLocation(@Body() updateSeenJobDto: UpdateSeenJobLocationDto) {
     Logger.log('PATCH', '/seen-jobs/location');
     return await this.seenJobsService.updateSeenJobLocation(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.location,
     );
@@ -119,7 +119,7 @@ export class SeenJobsController {
   async updateFirstSeen(@Body() updateSeenJobDto: UpdateSeenJobFirstSeenDto) {
     Logger.log('PATCH', '/seen-jobs/first-seen');
     return await this.seenJobsService.updateSeenJobFirstSeen(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.first_seen,
     );
@@ -129,7 +129,7 @@ export class SeenJobsController {
   async updatePostedDate(@Body() updateSeenJobDto: UpdateSeenJobPostedDateDto) {
     Logger.log('PATCH', '/seen-jobs/posted-date');
     return await this.seenJobsService.updateSeenJobPostedDate(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.posted_date,
     );
@@ -139,7 +139,7 @@ export class SeenJobsController {
   async updateDeadline(@Body() updateSeenJobDto: UpdateSeenJobDeadlineDto) {
     Logger.log('PATCH', '/seen-jobs/deadline');
     return await this.seenJobsService.updateSeenJobDeadline(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.deadline,
     );
@@ -149,7 +149,7 @@ export class SeenJobsController {
   async updateFit(@Body() updateSeenJobDto: UpdateSeenJobFitDto) {
     Logger.log('PATCH', '/seen-jobs/fit');
     return await this.seenJobsService.updateSeenJobFit(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.fit,
     );
@@ -159,7 +159,7 @@ export class SeenJobsController {
   async updateStatus(@Body() updateSeenJobDto: UpdateSeenJobStatusDto) {
     Logger.log('PATCH', '/seen-jobs/status');
     return await this.seenJobsService.updateSeenJobStatus(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.status,
     );
@@ -169,7 +169,7 @@ export class SeenJobsController {
   async updatePortal(@Body() updateSeenJobDto: UpdateSeenJobPortalDto) {
     Logger.log('PATCH', '/seen-jobs/portal');
     return await this.seenJobsService.updateSeenJobPortal(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.portal,
     );
@@ -179,7 +179,7 @@ export class SeenJobsController {
   async updateSource(@Body() updateSeenJobDto: UpdateSeenJobSourceDto) {
     Logger.log('PATCH', '/seen-jobs/source');
     return await this.seenJobsService.updateSeenJobSource(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.source,
     );
@@ -189,7 +189,7 @@ export class SeenJobsController {
   async updateRankScore(@Body() updateSeenJobDto: UpdateSeenJobRankScoreDto) {
     Logger.log('PATCH', '/seen-jobs/rank-score');
     return await this.seenJobsService.updateSeenJobRankScore(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.rank_score,
     );
@@ -201,7 +201,7 @@ export class SeenJobsController {
   ) {
     Logger.log('PATCH', '/seen-jobs/rank-verdict');
     return await this.seenJobsService.updateSeenJobRankVerdict(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.rank_verdict,
     );
@@ -211,7 +211,7 @@ export class SeenJobsController {
   async updateRankDate(@Body() updateSeenJobDto: UpdateSeenJobRankDateDto) {
     Logger.log('PATCH', '/seen-jobs/rank-date');
     return await this.seenJobsService.updateSeenJobRankDate(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.rank_date,
     );
@@ -223,7 +223,7 @@ export class SeenJobsController {
   ) {
     Logger.log('PATCH', '/seen-jobs/location-verdict');
     return await this.seenJobsService.updateSeenJobLocationVerdict(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.location_verdict,
     );
@@ -235,7 +235,7 @@ export class SeenJobsController {
   ) {
     Logger.log('PATCH', '/seen-jobs/language-gate');
     return await this.seenJobsService.updateSeenJobLanguageGate(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.language_gate,
     );
@@ -247,7 +247,7 @@ export class SeenJobsController {
   ) {
     Logger.log('PATCH', '/seen-jobs/language-note');
     return await this.seenJobsService.updateSeenJobLanguageNote(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.language_note,
     );
@@ -257,7 +257,7 @@ export class SeenJobsController {
   async updateStrengths(@Body() updateSeenJobDto: UpdateSeenJobStrengthsDto) {
     Logger.log('PATCH', '/seen-jobs/strengths');
     return await this.seenJobsService.updateSeenJobStrengths(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.strengths,
     );
@@ -267,7 +267,7 @@ export class SeenJobsController {
   async updateGaps(@Body() updateSeenJobDto: UpdateSeenJobGapsDto) {
     Logger.log('PATCH', '/seen-jobs/gaps');
     return await this.seenJobsService.updateSeenJobGaps(
-      updateSeenJobDto.id,
+      updateSeenJobDto.job_key,
       updateSeenJobDto.u_id,
       updateSeenJobDto.gaps,
     );
@@ -275,10 +275,10 @@ export class SeenJobsController {
 
   // ---------------------------------------------------------------- delete
 
-  /** Deletes a seen job selected by the `id` sent in the body. */
+  /** Deletes a seen job selected by the `job_key` sent in the body. */
   @Delete('delete')
   async remove(@Body() dto: SeenJobIdDto) {
     Logger.log('DELETE', '/seen-jobs/delete');
-    return await this.seenJobsService.deleteSeenJobById(dto.id);
+    return await this.seenJobsService.deleteSeenJobById(dto.job_key);
   }
 }

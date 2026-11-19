@@ -11,7 +11,7 @@ import { SeenJobRefDto } from './seen-job-id.dto.js';
 
 /**
  * Request bodies for the single-field update endpoints.
- * Each DTO carries the target `id` + `u_id` plus exactly one column, so a
+ * Each DTO carries the target `job_key` + `u_id` plus exactly one column, so a
  * request can only change that column of the selected seen job, and only when
  * the record belongs to the user that sent it.
  */

@@ -1,26 +1,24 @@
 import {
   Entity,
   Index,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   JoinColumn,
   ManyToOne,
-  Unique,
 } from 'typeorm';
 import { UserDataEntity } from '../user_data/ud.entity.js';
 
 /**
  * A job vacancy that has already been seen by the scraper.
  *
- * Every record belongs to exactly one `user_data` row through `uID`, and the
- * natural key `job_key` (for example `portal:external_id`) is unique per user,
- * so the same offer can never be stored twice for the same user.
+ * `job_key` is a UUID primary key supplied by the client, so the same offer can
+ * never be stored twice. Every record also belongs to exactly one `user_data`
+ * row through `uID`.
  */
 @Entity('seen_jobs')
-@Unique('UQ_SEEN_JOBS_USER_JOB_KEY', ['u_id', 'job_key'])
 export class SeenJobEntity {
-  @PrimaryGeneratedColumn('uuid', { name: 'ID' })
-  id: string; // Generated primary key
+  @PrimaryColumn({ type: 'uuid', nullable: false })
+  job_key: string; // UUID primary key of the offer
 
   @Column({ type: 'uuid', name: 'uID', nullable: false })
   u_id: string; // Owner of the record (user_data.id)
@@ -28,9 +26,6 @@ export class SeenJobEntity {
   @ManyToOne(() => UserDataEntity, { nullable: false, onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'uID', referencedColumnName: 'id' })
   user: UserDataEntity; // Foreign key to user_data; never cascaded
-
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  job_key: string; // Stable unique key of the offer
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   title: string; // Job title
