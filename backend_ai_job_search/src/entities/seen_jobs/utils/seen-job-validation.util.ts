@@ -1,7 +1,18 @@
 import { BadRequestException } from '@nestjs/common';
 
+/** Postgres `uuid` textual representation, case-insensitive. */
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Ensures a value is a UUID string, used for `id` and `u_id`. */
+export function assertValidUuid(value: string, field: string): void {
+  if (typeof value !== 'string' || !UUID_REGEX.test(value.trim())) {
+    throw new BadRequestException(`${field} must be a valid UUID`);
+  }
+}
+
 /**
- * Ensures the natural primary key is a non-blank string that fits into the
+ * Ensures the natural key is a non-blank string that fits into the
  * `job_key` varchar column.
  */
 export function assertValidSeenJobKey(jobKey: string): void {
@@ -45,10 +56,7 @@ export function assertOptionalStringArray(
     return;
   }
 
-  if (
-    !Array.isArray(value) ||
-    value.some((item) => typeof item !== 'string')
-  ) {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
     throw new BadRequestException(`${field} must be an array of strings`);
   }
 }

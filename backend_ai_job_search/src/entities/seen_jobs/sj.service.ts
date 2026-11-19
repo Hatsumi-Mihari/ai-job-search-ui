@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SeenJobEntity } from './sj.entity.js';
+import { UserDataEntity } from '../user_data/ud.entity.js';
 import { CreateSeenJobDto } from './dto/create-seen-job.dto.js';
 import { Measure } from '@/common/services/index.js';
 import {
@@ -15,6 +16,7 @@ import {
   assertNonEmptyString,
   assertOptionalStringArray,
   assertValidSeenJobKey,
+  assertValidUuid,
 } from './utils/seen-job-validation.util.js';
 import {
   normalizeOptionalStringArray,
@@ -23,17 +25,16 @@ import {
 
 /**
  * Fields that are allowed to be changed after a seen job has been created.
- * `job_key` is the natural primary key and must never be edited.
+ * `id` is the generated primary key and `u_id` is the owner, so neither can be
+ * edited through an update.
  */
-export type UpdateSeenJobPayload = Partial<
-  Omit<CreateSeenJobDto, 'job_key'>
->;
+export type UpdateSeenJobPayload = Partial<Omit<CreateSeenJobDto, 'u_id'>>;
 
 /** Result returned by every mutating operation of this service. */
 export type SeenJobsMutationResult = {
   success: boolean;
   message: string;
-  job_key?: string;
+  id?: string;
 };
 
 @Injectable()
@@ -41,6 +42,8 @@ export class SeenJobsService {
   constructor(
     @InjectRepository(SeenJobEntity)
     private readonly seenJobRepository: Repository<SeenJobEntity>,
+    @InjectRepository(UserDataEntity)
+    private readonly userDataRepository: Repository<UserDataEntity>,
   ) {}
 
   // ---------------------------------------------------------------- create
@@ -49,6 +52,7 @@ export class SeenJobsService {
   async createSeenJob(
     seenJobDTO: CreateSeenJobDto,
   ): Promise<SeenJobsMutationResult> {
+    assertValidUuid(seenJobDTO.u_id, 'u_id');
     assertValidSeenJobKey(seenJobDTO.job_key);
     assertNonEmptyString(seenJobDTO.title, 'title');
     assertMaxLength(seenJobDTO.title, 255, 'title');
@@ -65,14 +69,23 @@ export class SeenJobsService {
     assertOptionalStringArray(seenJobDTO.gaps, 'gaps');
 
     const jobKey = seenJobDTO.job_key.trim();
+    const userId = seenJobDTO.u_id.trim();
 
-    const existing = await this.seenJobRepository.findOneBy({ job_key: jobKey });
+    await this.assertUserExists(userId);
+
+    const existing = await this.seenJobRepository.findOneBy({
+      u_id: userId,
+      job_key: jobKey,
+    });
 
     if (existing) {
-      throw new ConflictException(`Seen job with job_key ${jobKey} already exists`);
+      throw new ConflictException(
+        `Seen job with job_key ${jobKey} already exists for user ${userId}`,
+      );
     }
 
     const newSeenJob = this.seenJobRepository.create({
+      u_id: userId,
       job_key: jobKey,
       title: seenJobDTO.title.trim(),
       company: seenJobDTO.company.trim(),
@@ -95,14 +108,17 @@ export class SeenJobsService {
       gaps: normalizeOptionalStringArray(seenJobDTO.gaps),
     });
 
-    Logger.log(`createSeenJob job_key=${jobKey}`, 'SeenJobsService');
+    Logger.log(
+      `createSeenJob id=generated u_id=${userId} job_key=${jobKey}`,
+      'SeenJobsService',
+    );
 
     const savedSeenJob = await this.seenJobRepository.save(newSeenJob);
 
     return {
       success: true,
       message: 'Seen job successfully created',
-      job_key: savedSeenJob.job_key,
+      id: savedSeenJob.id,
     };
   }
 
@@ -115,15 +131,13 @@ export class SeenJobsService {
   }
 
   @Measure('SeenJobsService')
-  async findOneById(jobKey: string): Promise<SeenJobEntity> {
-    assertValidSeenJobKey(jobKey);
+  async findOneById(id: string): Promise<SeenJobEntity> {
+    assertValidUuid(id, 'id');
 
-    const seenJob = await this.seenJobRepository.findOneBy({
-      job_key: jobKey.trim(),
-    });
+    const seenJob = await this.seenJobRepository.findOneBy({ id });
 
     if (!seenJob) {
-      throw new NotFoundException(`Seen job with job_key ${jobKey} not found`);
+      throw new NotFoundException(`Seen job with id ${id} not found`);
     }
 
     return seenJob;
@@ -137,225 +151,284 @@ export class SeenJobsService {
    */
   @Measure('SeenJobsService')
   async updateSeenJob(
-    jobKey: string,
+    id: string,
+    userId: string,
     seenJobDTO: UpdateSeenJobPayload,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, seenJobDTO);
+    return this.applyUpdate(id, userId, seenJobDTO);
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobTitle(
-    jobKey: string,
+    id: string,
+    userId: string,
     title: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { title });
+    return this.applyUpdate(id, userId, { title });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobCompany(
-    jobKey: string,
+    id: string,
+    userId: string,
     company: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { company });
+    return this.applyUpdate(id, userId, { company });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobUrl(
-    jobKey: string,
+    id: string,
+    userId: string,
     url: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { url });
+    return this.applyUpdate(id, userId, { url });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobLocation(
-    jobKey: string,
+    id: string,
+    userId: string,
     location: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { location });
+    return this.applyUpdate(id, userId, { location });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobFirstSeen(
-    jobKey: string,
+    id: string,
+    userId: string,
     firstSeen: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { first_seen: firstSeen });
+    return this.applyUpdate(id, userId, { first_seen: firstSeen });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobPostedDate(
-    jobKey: string,
+    id: string,
+    userId: string,
     postedDate: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { posted_date: postedDate });
+    return this.applyUpdate(id, userId, { posted_date: postedDate });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobDeadline(
-    jobKey: string,
+    id: string,
+    userId: string,
     deadline: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { deadline });
+    return this.applyUpdate(id, userId, { deadline });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobFit(
-    jobKey: string,
+    id: string,
+    userId: string,
     fit: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { fit });
+    return this.applyUpdate(id, userId, { fit });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobStatus(
-    jobKey: string,
+    id: string,
+    userId: string,
     status: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { status });
+    return this.applyUpdate(id, userId, { status });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobPortal(
-    jobKey: string,
+    id: string,
+    userId: string,
     portal: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { portal });
+    return this.applyUpdate(id, userId, { portal });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobSource(
-    jobKey: string,
+    id: string,
+    userId: string,
     source: string,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { source });
+    return this.applyUpdate(id, userId, { source });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobRankScore(
-    jobKey: string,
+    id: string,
+    userId: string,
     rankScore: number | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { rank_score: rankScore });
+    return this.applyUpdate(id, userId, { rank_score: rankScore });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobRankVerdict(
-    jobKey: string,
+    id: string,
+    userId: string,
     rankVerdict: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { rank_verdict: rankVerdict });
+    return this.applyUpdate(id, userId, { rank_verdict: rankVerdict });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobRankDate(
-    jobKey: string,
+    id: string,
+    userId: string,
     rankDate: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { rank_date: rankDate });
+    return this.applyUpdate(id, userId, { rank_date: rankDate });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobLocationVerdict(
-    jobKey: string,
+    id: string,
+    userId: string,
     locationVerdict: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { location_verdict: locationVerdict });
+    return this.applyUpdate(id, userId, { location_verdict: locationVerdict });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobLanguageGate(
-    jobKey: string,
+    id: string,
+    userId: string,
     languageGate: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { language_gate: languageGate });
+    return this.applyUpdate(id, userId, { language_gate: languageGate });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobLanguageNote(
-    jobKey: string,
+    id: string,
+    userId: string,
     languageNote: string | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { language_note: languageNote });
+    return this.applyUpdate(id, userId, { language_note: languageNote });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobStrengths(
-    jobKey: string,
+    id: string,
+    userId: string,
     strengths: string[] | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { strengths });
+    return this.applyUpdate(id, userId, { strengths });
   }
 
   @Measure('SeenJobsService')
   async updateSeenJobGaps(
-    jobKey: string,
+    id: string,
+    userId: string,
     gaps: string[] | null,
   ): Promise<SeenJobsMutationResult> {
-    return this.applyUpdate(jobKey, { gaps });
+    return this.applyUpdate(id, userId, { gaps });
   }
 
   // ---------------------------------------------------------------- delete
 
   /**
-   * Deletes a seen job by its natural primary key. Records can only be removed
-   * by `job_key`, so no other criteria is accepted here.
+   * Deletes a seen job by its generated primary key. Only `id` is required:
+   * the owning `user_data` row is never touched and is never cascaded.
    */
   @Measure('SeenJobsService')
   async deleteSeenJobById(
-    jobKey: string,
-  ): Promise<{ success: boolean; message: string; job_key: string }> {
-    assertValidSeenJobKey(jobKey);
+    id: string,
+  ): Promise<{ success: boolean; message: string; id: string }> {
+    assertValidUuid(id, 'id');
 
-    const seenJob = await this.seenJobRepository.findOneBy({
-      job_key: jobKey.trim(),
-    });
+    const seenJob = await this.seenJobRepository.findOneBy({ id });
 
     if (!seenJob) {
-      throw new NotFoundException(`Seen job with job_key ${jobKey} not found`);
+      throw new NotFoundException(`Seen job with id ${id} not found`);
     }
 
-    await this.seenJobRepository.delete({ job_key: jobKey.trim() });
+    await this.seenJobRepository.delete({ id });
 
-    Logger.log(`deleteSeenJobById job_key=${jobKey}`, 'SeenJobsService');
+    Logger.log(`deleteSeenJobById id=${id}`, 'SeenJobsService');
 
     return {
       success: true,
       message: 'Seen job successfully deleted',
-      job_key: jobKey,
+      id,
     };
   }
 
   /** Alias kept short for callers that already use `deleteSeenJob`. */
   async deleteSeenJob(
-    jobKey: string,
-  ): Promise<{ success: boolean; message: string; job_key: string }> {
-    return this.deleteSeenJobById(jobKey);
+    id: string,
+  ): Promise<{ success: boolean; message: string; id: string }> {
+    return this.deleteSeenJobById(id);
   }
 
   // --------------------------------------------------------------- helpers
 
   /**
-   * Shared update routine: validates the key, ensures the record exists,
-   * filters out unknown/undefined fields and persists the merged entity.
+   * Verifies that the owner UUID references an existing `user_data` row. The
+   * database foreign key enforces the same rule; this check turns the raw
+   * constraint failure into a clear 400 response.
+   */
+  private async assertUserExists(userId: string): Promise<void> {
+    const user = await this.userDataRepository.findOneBy({ id: userId });
+
+    if (!user) {
+      throw new BadRequestException(
+        `u_id ${userId} does not reference an existing user`,
+      );
+    }
+  }
+
+  /**
+   * Shared update routine: validates `id` + `u_id`, ensures the record exists
+   * and belongs to that user, filters out unknown/undefined fields and
+   * persists the merged entity.
    */
   private async applyUpdate(
-    jobKey: string,
+    id: string,
+    userId: string,
     patch: UpdateSeenJobPayload,
   ): Promise<SeenJobsMutationResult> {
-    assertValidSeenJobKey(jobKey);
+    assertValidUuid(id, 'id');
+    assertValidUuid(userId, 'u_id');
 
-    const trimmedKey = jobKey.trim();
-
+    // Ownership check: the row must exist AND belong to the given user.
     const seenJob = await this.seenJobRepository.findOneBy({
-      job_key: trimmedKey,
+      id,
+      u_id: userId,
     });
 
     if (!seenJob) {
-      throw new NotFoundException(`Seen job with job_key ${jobKey} not found`);
+      throw new NotFoundException(
+        `Seen job with id ${id} not found for user ${userId}`,
+      );
     }
 
     const changes: Partial<SeenJobEntity> = {};
+
+    if (patch.job_key !== undefined) {
+      assertValidSeenJobKey(patch.job_key);
+
+      const jobKey = patch.job_key.trim();
+
+      if (jobKey !== seenJob.job_key) {
+        const duplicate = await this.seenJobRepository.findOneBy({
+          u_id: userId,
+          job_key: jobKey,
+        });
+
+        if (duplicate) {
+          throw new ConflictException(
+            `Seen job with job_key ${jobKey} already exists for user ${userId}`,
+          );
+        }
+      }
+
+      changes.job_key = jobKey;
+    }
 
     if (patch.title !== undefined) {
       assertNonEmptyString(patch.title, 'title');
@@ -455,12 +528,12 @@ export class SeenJobsService {
 
     await this.seenJobRepository.save(merged);
 
-    Logger.log(`updateSeenJob job_key=${trimmedKey}`, 'SeenJobsService');
+    Logger.log(`updateSeenJob id=${id} u_id=${userId}`, 'SeenJobsService');
 
     return {
       success: true,
       message: 'Seen job successfully updated',
-      job_key: trimmedKey,
+      id,
     };
   }
 }
