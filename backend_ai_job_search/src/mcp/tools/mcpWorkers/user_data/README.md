@@ -5,14 +5,17 @@ They are generated from the existing `UserDataService`
 (`src/entities/user_data/ud.service.ts`); no duplicate persistence or HTTP
 client is introduced.
 
-Every tool requires the UUID of one `user_data` row (`user_id`). There is no
-lookup by `user_name` or by any other field, so a tool call can only read or
-write the explicitly selected user.
+Every document tool requires the UUID of one `user_data` row (`user_id`). There
+is no lookup by `user_name` or by any other field, so a tool call can only read
+or write the explicitly selected user. The one input-free tool,
+`user_data_get_selected_user_uid`, returns the uid of the user that was selected
+through `POST /user-data/select`.
 
 ## Tools
 
 | MCP tool | Purpose | Service call | Equivalent HTTP endpoint |
 | --- | --- | --- | --- |
+| `user_data_get_selected_user_uid` | Read the uid of the selected user (no input) | `UserDataService.findSelectedUser` | `GET /user-data/selected` |
 | `user_data_get_markdown_field` | Read one document | `UserDataService.findOneById` | `POST /user-data/find` |
 | `user_data_get_markdown_fields` | Read all eleven or a selected subset | `UserDataService.findOneById` | `POST /user-data/find` |
 | `user_data_update_markdown_field` | Overwrite one document | `UserDataService.updateUserData` | `PATCH /user-data/<field>` |
@@ -31,11 +34,23 @@ Dedicated per-document tools, so a caller never has to pick a field name:
 | `user_data_get_web_research` | `09-web-research_md` | `UserDataService.findOneById` | `POST /user-data/find` |
 | `user_data_update_web_research` | `09-web-research_md` | `UserDataService.updateUserData` | `PATCH /user-data/web-research-md` |
 
-All twelve tools are registered by `McpUserDataModule`, which is imported by
-`McpServerModule`. `McpUserDataWorker` provides the generic tools,
-`McpUserDataDocumentsWorker` provides the eight dedicated tools. The MCP
-endpoint is the one configured by `McpModule` (`/mcp` in
+All thirteen tools are registered by `McpUserDataModule`, which is imported by
+`McpServerModule`. `McpUserDataWorker` provides the generic tools and the
+selection tool, `McpUserDataDocumentsWorker` provides the eight dedicated
+tools. The MCP endpoint is the one configured by `McpModule` (`/mcp` in
 `src/mcp/mcp.module.ts`).
+
+## User selection
+
+The selected user is in-memory state of `UserDataService`. It is set by
+`POST /user-data/select`, read by `GET /user-data/selected` and cleared by
+`DELETE /user-data/selected`; nothing is written to the database. The MCP tool
+`user_data_get_selected_user_uid` reads the same state.
+
+An MCP call is a separate request from the HTTP selection, so the selection is
+only shared when the HTTP server and the MCP server run in the same process and
+the user was selected before the tool call. Without a selection the tool returns
+`{"uid": null}`.
 
 ## Fields
 
@@ -68,6 +83,12 @@ content for a freshly created user instead of `null`.
 still omit a document explicitly by sending `null` or an empty string.
 
 ## Usage
+
+Read the uid of the selected user (no input):
+
+```json
+{}
+```
 
 Read all documents of the selected user:
 
@@ -147,7 +168,9 @@ behind the deployment's normal access controls.
 
 ## Known limitations
 
-- The caller must know the target UUID; the tools cannot find a user by name.
+- The caller must know the target UUID; the tools cannot find a user by name or
+  search user data. `user_data_get_selected_user_uid` only reports a selection
+  that was already made through `POST /user-data/select`.
 - There is no revision history, optimistic locking or conflict detection: the
   last write wins.
 - Markdown content is free-form text. Only the type is validated; there is no

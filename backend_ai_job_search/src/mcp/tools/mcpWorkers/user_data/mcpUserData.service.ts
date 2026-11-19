@@ -22,8 +22,11 @@ const CONTEXT = 'McpUserDataWorker';
 /**
  * MCP tools for the markdown documents stored on one selected user data row.
  *
- * Every tool requires `user_id` (the UUID of the `user_data` record) and only
- * ever reads or writes that row. There is deliberately no lookup by
+ * `user_data_get_selected_user_uid` returns the uid of the user that was
+ * selected through the HTTP endpoints; it is the only tool without input.
+ *
+ * Every other tool requires `user_id` (the UUID of the `user_data` record) and
+ * only ever reads or writes that row. There is deliberately no lookup by
  * `user_name`: a caller must know the UUID of the selected user first.
  *
  * Reads use `UserDataService.findOneById`; writes use
@@ -110,6 +113,28 @@ type MarkdownDocumentsUpdateResult = UserDataMutationResult & {
 @Injectable()
 export class McpUserDataWorker {
   constructor(private readonly userDataService: UserDataService) {}
+
+  // ----------------------------------------------------------- selected user
+
+  /**
+   * Exposes the selection maintained by `UserDataService`. The selection is
+   * set through `POST /user-data/select` and kept in memory, so this tool
+   * reads the same state the HTTP endpoints use.
+   */
+  @Tool({
+    name: 'user_data_get_selected_user_uid',
+    description:
+      'Returns the uid (UUID of the user_data row) of the user selected through POST /user-data/select, or null when no user is selected. The selection is in-memory state of the API process and is not stored in the database.',
+    inputSchema: z.object({}),
+    annotations: { readOnlyHint: true, idempotentHint: true },
+  })
+  async userDataGetSelectedUserUid(): Promise<{ uid: string | null }> {
+    Logger.log('user_data_get_selected_user_uid', CONTEXT);
+
+    const uid = await this.userDataService.findSelectedUser();
+
+    return { uid: uid ?? null };
+  }
 
   // ------------------------------------------------------------------- read
 
