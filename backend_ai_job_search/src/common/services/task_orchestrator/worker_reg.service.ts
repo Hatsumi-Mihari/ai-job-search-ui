@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Workers } from '@/common/workers/index.js';
+import {
+  TexTemplateProcessingWorker,
+  Workers,
+} from '@/common/workers/index.js';
 
 const CONTEXT = 'TaskOrchestratorService/WorkerRegistryService';
 
@@ -14,9 +17,15 @@ export type TaskProcessor = (taskId: string) => Promise<void> | void;
 export class WorkerRegistry {
   private registry = new Map<string, TaskProcessor>();
 
-  constructor(private readonly workers: Workers) {
+  constructor(
+    private readonly workers: Workers,
+    private readonly texTemplateProcessingWorker: TexTemplateProcessingWorker,
+  ) {
     this.register('vacancy_processing', (taskId: string) =>
        this.workers.test(taskId),
+    );
+    this.register('tex_template_processing', (taskId: string) =>
+      this.texTemplateProcessingWorker.process(taskId),
     );
   }
   // -------------------------------------------------------------- register
